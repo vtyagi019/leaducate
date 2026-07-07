@@ -432,6 +432,14 @@ async function markBest(qId, ansId) {
   catch (err) { state.loadError = err.message; render(); }
 }
 
+async function deleteAnswer(qId, ansId) {
+  if (!confirm('Delete this answer? You'll lose 5 points.')) return;
+  try {
+    await api('/questions/' + qId + '/answers/' + ansId + '/delete', { method: 'POST', body: { author: state.currentUser } });
+    await loadQuestion(qId);
+  } catch (err) { state.loadError = err.message; render(); }
+}
+
 function setFilter(s) { state.filter = s; loadHome(); }
 function setSort(s) { state.sort = s; loadHome(); }
 function setProfileTab(t) { state.profileTab = t; render(); }
@@ -562,6 +570,7 @@ function viewQuestion() {
             <span class="ans-author">${escapeHtml(a.author)} ${a.isBest ? '<span class="ans-best">✓ best answer</span>' : ''}</span>
             <span style="display:flex;gap:8px;align-items:center;">
               ${(isAuthor && q.status !== 'solved') ? `<button class="mark-btn" onclick="markBest(${q.id},${a.id})">Mark as best</button>` : ''}
+              ${state.currentUser === a.author ? `<button class="report-link" onclick="deleteAnswer(${q.id},${a.id})">Delete</button>` : ''}
               ${state.currentUser !== a.author ? `<button class="report-link" onclick="reportContent(${q.id},${a.id})">Report</button>` : ''}
             </span>
           </div>
