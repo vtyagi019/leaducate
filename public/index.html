@@ -3,677 +3,675 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Leaducate — get your doubt solved in minutes, not hours</title>
+<title>Leaducate — Get your doubt solved in minutes, not hours</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --paper:#FAF7F2; --card:#FFFFFF; --ink:#1C1B1A; --muted:#6B6760; --rule:#DFD9CA;
-    --signal:#FF5A36; --signal-ink:#7A2A14; --good:#2F6F4F; --warn:#A56B12; --radius:10px;
-  }
-  *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;}
-  body{background:var(--paper);color:var(--ink);font-family:'Inter',system-ui,sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased;}
-  h1,h2,h3,.display{font-family:'Space Grotesk',sans-serif;}
-  .mono{font-family:'IBM Plex Mono',monospace;}
-  a{color:inherit;text-decoration:none;}
-  button{font-family:inherit;cursor:pointer;}
-  :focus-visible{outline:2px solid var(--ink);outline-offset:2px;}
+:root{
+  --bg:#0B0B1A;
+  --surface:#13132B;
+  --surface2:#1A1A35;
+  --border:#2A2A4A;
+  --purple:#7C3AED;
+  --purple-light:#9D5CF6;
+  --purple-dim:#2D1B69;
+  --text:#FFFFFF;
+  --muted:#8B8BA7;
+  --good:#22C55E;
+  --warn:#F59E0B;
+  --danger:#EF4444;
+  --radius:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh;}
+h1,h2,h3{font-family:'Space Grotesk',sans-serif;}
+a{color:inherit;text-decoration:none;}
+button{font-family:inherit;cursor:pointer;}
+:focus-visible{outline:2px solid var(--purple);outline-offset:2px;}
+input,textarea,select{font-family:inherit;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:14px;width:100%;}
+input:focus,textarea:focus{border-color:var(--purple);outline:none;}
+textarea{resize:vertical;}
+label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin:14px 0 6px;text-transform:uppercase;letter-spacing:.04em;}
 
-  .topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-bottom:1px solid var(--rule);background:var(--paper);position:sticky;top:0;z-index:20;flex-wrap:wrap;gap:10px;}
-  .brand{display:flex;align-items:center;gap:10px;}
-  .brand .name{font-size:20px;font-weight:700;letter-spacing:-0.01em;display:flex;align-items:center;gap:8px;}
-  .brand .tag{font-size:12px;color:var(--muted);font-family:'IBM Plex Mono',monospace;}
-  .logo-mark{width:26px;height:26px;flex-shrink:0;}
-  nav.mainnav{display:flex;gap:4px;flex-wrap:wrap;}
-  nav.mainnav a{padding:8px 12px;border-radius:999px;font-size:14px;font-weight:500;color:var(--muted);}
-  nav.mainnav a.active{background:var(--ink);color:var(--paper);}
-  nav.mainnav a:not(.active):hover{background:var(--rule);color:var(--ink);}
-  .session{display:flex;align-items:center;gap:10px;}
-  .pulse-pill{display:flex;align-items:center;gap:6px;font-size:12px;font-family:'IBM Plex Mono',monospace;color:var(--muted);padding:4px 10px;border:1px solid var(--rule);border-radius:999px;}
-  .pulse-dot{width:7px;height:7px;border-radius:50%;background:var(--good);animation:pulse 1.8s ease-in-out infinite;}
-  @media (prefers-reduced-motion: reduce){.pulse-dot{animation:none;}}
-  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
-  .btn{border:none;border-radius:999px;padding:9px 16px;font-size:14px;font-weight:600;}
-  .btn-signal{background:var(--signal);color:#fff;}
-  .btn-signal:hover{background:#e64a26;}
-  .btn-ghost{background:transparent;border:1px solid var(--rule);color:var(--ink);}
-  .btn-ghost:hover{background:var(--rule);}
-  .btn[disabled]{opacity:.5;cursor:not-allowed;}
+/* topbar */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:1px solid var(--border);background:rgba(11,11,26,.9);position:sticky;top:0;z-index:30;backdrop-filter:blur(12px);gap:12px;flex-wrap:wrap;}
+.brand{display:flex;align-items:center;gap:10px;}
+.logo-wrap{display:flex;align-items:center;gap:8px;}
+.logo-icon{width:32px;height:32px;}
+.logo-text{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;letter-spacing:-.02em;}
+.logo-text span{color:var(--purple-light);}
+.logo-tag{font-size:11px;color:var(--muted);margin-left:4px;display:none;}
+@media(min-width:640px){.logo-tag{display:inline;}}
+nav.mainnav{display:flex;gap:2px;}
+nav.mainnav a{padding:8px 14px;border-radius:999px;font-size:14px;font-weight:500;color:var(--muted);transition:all .15s;}
+nav.mainnav a.active{background:var(--purple);color:#fff;}
+nav.mainnav a:not(.active):hover{background:var(--surface2);color:var(--text);}
+.session{display:flex;align-items:center;gap:10px;}
+.live-pill{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);padding:5px 12px;border:1px solid var(--border);border-radius:999px;background:var(--surface);}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--good);animation:blink 2s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
 
-  main{max-width:880px;margin:0 auto;padding:28px 20px 80px;}
+/* btns */
+.btn{border:none;border-radius:999px;padding:9px 18px;font-size:14px;font-weight:600;transition:all .15s;}
+.btn-primary{background:var(--purple);color:#fff;}
+.btn-primary:hover{background:var(--purple-light);}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--muted);}
+.btn-ghost:hover{border-color:var(--purple);color:var(--text);}
+.btn-danger{background:transparent;border:1px solid var(--danger);color:var(--danger);}
+.btn-danger:hover{background:var(--danger);color:#fff;}
+.btn[disabled]{opacity:.4;cursor:not-allowed;}
+.btn-sm{padding:5px 12px;font-size:12px;}
 
-  .strap{border:1px solid var(--rule);border-radius:var(--radius);background:var(--card);padding:18px 20px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;}
-  .strap h1{font-size:18px;margin:0 0 4px;}
-  .strap p{margin:0;color:var(--muted);font-size:13px;}
-  .strap .stat{text-align:right;}
-  .strap .stat .num{font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:500;}
-  .strap .stat .lbl{font-size:11px;color:var(--muted);}
+main{max-width:900px;margin:0 auto;padding:32px 20px 100px;}
 
-  .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
-  .chip{border:1px solid var(--rule);background:var(--card);border-radius:999px;padding:6px 12px;font-size:13px;color:var(--muted);}
-  .chip.active{background:var(--ink);color:var(--paper);border-color:var(--ink);}
-  .sortrow{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
-  .sortrow .lbl{font-size:12px;color:var(--muted);font-family:'IBM Plex Mono',monospace;}
+/* cards */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;}
+.card+.card{margin-top:10px;}
 
-  .card{border:1px solid var(--rule);background:var(--card);border-radius:var(--radius);padding:16px 18px;margin-bottom:12px;}
-  .qcard{display:block;transition:border-color .15s;}
-  .qcard:hover{border-color:var(--ink);}
-  .subj{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);margin-bottom:6px;}
-  .dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
-  .qtitle{font-size:16px;font-weight:600;margin:0 0 4px;}
-  .qsnippet{font-size:13px;color:var(--muted);margin:0 0 10px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
-  .qmeta{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);flex-wrap:wrap;gap:8px;}
-  .timer{font-family:'IBM Plex Mono',monospace;font-weight:500;padding:3px 8px;border-radius:6px;}
-  .timer.good{color:var(--good);background:#EAF3EE;}
-  .timer.warn{color:var(--warn);background:#FBF1E2;}
-  .timer.signal{color:var(--signal-ink);background:#FDEAE3;}
-  .timer.solved{color:var(--good);background:#EAF3EE;}
-  .badge-status{font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid var(--rule);}
+/* home */
+.hero-strip{background:linear-gradient(135deg,var(--purple-dim),var(--surface));border:1px solid var(--border);border-radius:var(--radius);padding:24px 28px;margin-bottom:24px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;}
+.hero-strip h1{font-size:20px;margin-bottom:4px;}
+.hero-strip p{color:var(--muted);font-size:13px;}
+.hero-stat .num{font-size:28px;font-weight:700;color:var(--purple-light);}
+.hero-stat .lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
 
-  .empty{text-align:center;padding:50px 20px;color:var(--muted);}
-  .empty .display{font-size:18px;color:var(--ink);margin-bottom:6px;}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+.chip{border:1px solid var(--border);background:var(--surface);border-radius:999px;padding:6px 14px;font-size:13px;color:var(--muted);cursor:pointer;transition:all .15s;}
+.chip:hover{border-color:var(--purple);color:var(--text);}
+.chip.active{background:var(--purple);border-color:var(--purple);color:#fff;}
+.sortrow{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-size:12px;color:var(--muted);}
+.sortrow a{color:var(--muted);}
+.sortrow a.active-sort{color:var(--purple-light);font-weight:600;}
 
-  .formcard{max-width:560px;margin:0 auto;}
-  label{display:block;font-size:13px;font-weight:600;margin:14px 0 6px;}
-  input[type=text], textarea, select{width:100%;border:1px solid var(--rule);border-radius:8px;padding:10px 12px;font-family:inherit;font-size:14px;background:var(--paper);color:var(--ink);}
-  textarea{min-height:110px;resize:vertical;}
-  .subjpick{display:flex;gap:8px;flex-wrap:wrap;}
-  .subjpick button{border:1px solid var(--rule);background:var(--paper);border-radius:999px;padding:6px 12px;font-size:13px;}
-  .subjpick button.active{background:var(--ink);color:var(--paper);border-color:var(--ink);}
-  .err{color:var(--signal-ink);font-size:12px;margin-top:6px;}
-  .formfoot{display:flex;justify-content:flex-end;gap:10px;margin-top:18px;}
+/* qcard */
+.qcard{display:block;border:1px solid var(--border);background:var(--surface);border-radius:var(--radius);padding:18px 20px;margin-bottom:10px;transition:border-color .15s,transform .1s;}
+.qcard:hover{border-color:var(--purple);transform:translateY(-1px);}
+.subj-row{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);margin-bottom:6px;}
+.subj-dot{width:7px;height:7px;border-radius:50%;display:inline-block;flex-shrink:0;}
+.qtitle{font-size:16px;font-weight:600;margin-bottom:4px;line-height:1.3;}
+.qsnip{font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;margin-bottom:10px;}
+.qmeta{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);flex-wrap:wrap;gap:8px;}
+.timer{font-size:11px;font-weight:600;padding:3px 10px;border-radius:999px;}
+.timer.good{background:#14532D;color:#86EFAC;}
+.timer.warn{background:#451A03;color:#FCD34D;}
+.timer.hot{background:#450A0A;color:#FCA5A5;}
+.timer.solved{background:#14532D;color:#86EFAC;}
+.status-badge{font-size:11px;padding:3px 10px;border-radius:999px;border:1px solid var(--border);color:var(--muted);}
+.status-badge.solved{border-color:#14532D;color:#86EFAC;}
 
-  .mediabar{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
-  .mediabtn{border:1px solid var(--rule);background:var(--paper);border-radius:999px;padding:6px 12px;font-size:13px;}
-  .mediabtn.recording{background:var(--signal);color:#fff;border-color:var(--signal);}
-  .media-preview{margin-top:10px;border:1px solid var(--rule);border-radius:8px;padding:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
-  .media-preview img, .media-preview video{max-width:160px;max-height:120px;border-radius:6px;}
-  .media-preview audio{flex:1;min-width:160px;}
-  .remove-media{margin-left:auto;border:none;background:none;color:var(--signal-ink);font-size:12px;text-decoration:underline;}
+.empty{text-align:center;padding:60px 20px;color:var(--muted);}
+.empty h3{font-size:18px;color:var(--text);margin-bottom:8px;}
 
-  .suggest-box{border:1px solid var(--rule);border-radius:8px;margin-top:8px;background:#FBF6EA;padding:10px 12px;}
-  .suggest-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;}
-  .suggest-item{display:flex;justify-content:space-between;gap:10px;padding:6px 0;font-size:13px;border-top:1px solid var(--rule);}
-  .suggest-item:first-of-type{border-top:none;}
-  .suggest-meta{color:var(--muted);font-size:11px;white-space:nowrap;}
+/* ask form */
+.form-wrap{max-width:580px;margin:0 auto;}
+.form-wrap h1{font-size:22px;margin-bottom:4px;}
+.form-wrap .sub{color:var(--muted);font-size:13px;margin-bottom:24px;}
+.subjpick{display:flex;gap:8px;flex-wrap:wrap;}
+.subjpick button{border:1px solid var(--border);background:var(--surface2);border-radius:999px;padding:7px 14px;font-size:13px;color:var(--muted);transition:all .15s;}
+.subjpick button:hover{border-color:var(--purple);color:var(--text);}
+.subjpick button.active{background:var(--purple);border-color:var(--purple);color:#fff;}
+.err{color:#FCA5A5;font-size:12px;margin-top:6px;}
+.formfoot{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;}
+.suggest-box{border:1px solid var(--purple-dim);border-radius:8px;background:rgba(124,58,237,.08);padding:12px 14px;margin-top:8px;}
+.suggest-label{font-size:11px;color:var(--purple-light);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;font-weight:600;}
+.suggest-item{display:flex;justify-content:space-between;gap:10px;padding:7px 0;font-size:13px;border-top:1px solid var(--border);color:var(--text);}
+.suggest-item:first-of-type{border-top:none;padding-top:0;}
+.suggest-item:hover{color:var(--purple-light);}
+.suggest-meta{color:var(--muted);font-size:11px;white-space:nowrap;}
 
-  .qmedia img, .qmedia video{max-width:100%;border-radius:8px;margin:10px 0;display:block;}
-  .qmedia audio{width:100%;margin:10px 0;display:block;}
-  .report-link{font-size:11px;color:var(--muted);background:none;border:none;text-decoration:underline;cursor:pointer;padding:0;}
+/* media */
+.mediabar{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+.mediabtn{border:1px solid var(--border);background:var(--surface2);border-radius:999px;padding:7px 14px;font-size:13px;color:var(--muted);transition:all .15s;}
+.mediabtn:hover{border-color:var(--purple);color:var(--text);}
+.mediabtn.rec{background:var(--danger);border-color:var(--danger);color:#fff;}
+.media-preview{margin-top:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.media-preview img,.media-preview video{max-width:160px;max-height:120px;border-radius:6px;}
+.media-preview audio{flex:1;min-width:160px;}
+.rm-media{background:none;border:none;color:var(--danger);font-size:12px;text-decoration:underline;margin-left:auto;}
+.qmedia img,.qmedia video{max-width:100%;border-radius:8px;margin:10px 0;display:block;}
+.qmedia audio{width:100%;margin:10px 0;display:block;}
 
-  .qfull-title{font-size:22px;margin:6px 0 8px;}
-  .qfull-body{font-size:15px;color:var(--ink);margin:0 0 14px;white-space:pre-wrap;}
-  .answers{margin-top:22px;}
-  .answers h3{font-size:14px;color:var(--muted);font-family:'IBM Plex Mono',monospace;font-weight:500;text-transform:uppercase;letter-spacing:.04em;}
-  .ans{display:flex;gap:10px;margin-bottom:14px;}
-  .avatar{width:32px;height:32px;border-radius:50%;background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0;}
-  .ans-body{flex:1;border:1px solid var(--rule);border-radius:var(--radius);padding:10px 14px;background:var(--card);}
-  .ans-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;gap:8px;}
-  .ans-author{font-size:13px;font-weight:600;}
-  .ans-best{font-size:11px;color:var(--good);font-weight:600;}
-  .mark-btn{font-size:12px;border:1px solid var(--rule);background:transparent;border-radius:999px;padding:4px 10px;}
-  .mark-btn:hover{border-color:var(--good);color:var(--good);}
-  .ansform{display:flex;gap:10px;margin-top:18px;}
-  .ansform textarea{min-height:46px;}
+/* question detail */
+.qfull-title{font-size:22px;margin:8px 0 10px;line-height:1.3;}
+.qfull-body{font-size:15px;color:#C4C4D4;white-space:pre-wrap;margin-bottom:14px;}
+.answers-section{margin-top:28px;}
+.answers-section h3{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:16px;font-weight:600;}
+.ans{display:flex;gap:12px;margin-bottom:14px;}
+.av{width:34px;height:34px;border-radius:50%;background:var(--purple);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;}
+.ans-card{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;}
+.ans-card.best{border-color:var(--good);background:rgba(34,197,94,.05);}
+.ans-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:6px;}
+.ans-author{font-size:13px;font-weight:600;}
+.best-badge{font-size:11px;color:var(--good);font-weight:700;}
+.ans-actions{display:flex;gap:8px;align-items:center;}
+.mark-btn{font-size:12px;border:1px solid var(--border);background:transparent;border-radius:999px;padding:4px 12px;color:var(--muted);transition:all .15s;}
+.mark-btn:hover{border-color:var(--good);color:var(--good);}
+.del-btn{font-size:11px;background:none;border:none;color:var(--danger);text-decoration:underline;opacity:.6;}
+.del-btn:hover{opacity:1;}
+.report-btn{font-size:11px;background:none;border:none;color:var(--muted);text-decoration:underline;}
+.report-btn:hover{color:var(--danger);}
+.ansform-wrap{margin-top:20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;}
 
-  .profile-card{border:1px solid var(--rule);border-radius:var(--radius);overflow:hidden;background:var(--card);margin-bottom:18px;}
-  .profile-banner{height:80px;background:var(--ink);}
-  .profile-body{padding:0 20px 18px;text-align:center;}
-  .profile-avatar-lg{width:72px;height:72px;border-radius:50%;background:var(--signal);color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;border:4px solid var(--card);margin:-36px auto 8px;}
-  .profile-name{font-size:18px;margin:0;}
-  .profile-stats-row{display:flex;justify-content:center;gap:28px;margin:16px 0 4px;}
-  .profile-stats-row .num{font-family:'IBM Plex Mono',monospace;font-size:20px;}
-  .profile-stats-row .lbl{font-size:11px;color:var(--muted);}
-  .tags{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0;justify-content:center;}
-  .tag{font-size:12px;border:1px solid var(--rule);border-radius:999px;padding:3px 10px;color:var(--muted);}
-  .badge-chip{font-size:12px;background:#F1ECDD;border-radius:999px;padding:3px 10px;color:#7A5A12;}
-  .ptabs{display:flex;border-bottom:1px solid var(--rule);margin-bottom:12px;}
-  .ptabs button{flex:1;padding:10px;background:none;border:none;font-size:13px;font-weight:600;color:var(--muted);border-bottom:2px solid transparent;}
-  .ptabs button.active{color:var(--ink);border-bottom-color:var(--signal);}
+/* AI synthesis */
+.ai-box{background:linear-gradient(135deg,rgba(124,58,237,.12),rgba(157,92,246,.06));border:1px solid var(--purple-dim);border-radius:var(--radius);padding:16px 18px;margin-top:16px;}
+.ai-label{font-size:11px;color:var(--purple-light);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.ai-text{font-size:14px;color:#C4C4D4;line-height:1.6;}
+.ai-loading{color:var(--muted);font-size:13px;font-style:italic;}
 
-  .lb-row{display:flex;align-items:center;gap:14px;padding:10px 0;border-bottom:1px solid var(--rule);}
-  .lb-row.me{background:#FBF6EA;border-radius:8px;padding-left:8px;}
-  .lb-rank{width:24px;font-family:'IBM Plex Mono',monospace;color:var(--muted);}
-  .lb-name{flex:1;font-weight:600;font-size:14px;}
-  .lb-pts{font-family:'IBM Plex Mono',monospace;font-size:14px;}
+/* profile */
+.profile-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:20px;}
+.profile-banner{height:90px;background:linear-gradient(135deg,var(--purple-dim),#1a0a40);}
+.profile-inner{padding:0 24px 24px;text-align:center;}
+.profile-av{width:76px;height:76px;border-radius:50%;background:var(--purple);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;border:4px solid var(--surface);margin:-38px auto 10px;}
+.profile-name{font-size:20px;font-weight:700;margin-bottom:4px;}
+.badge-pill{display:inline-block;background:var(--purple-dim);color:var(--purple-light);border-radius:999px;padding:4px 14px;font-size:12px;font-weight:600;}
+.pstats{display:flex;justify-content:center;gap:32px;margin:18px 0 10px;}
+.pstat .num{font-size:24px;font-weight:700;color:var(--purple-light);}
+.pstat .lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;}
+.skills-row{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:10px;}
+.skill-tag{font-size:12px;border:1px solid var(--border);border-radius:999px;padding:3px 12px;color:var(--muted);}
+.ptabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:16px;}
+.ptabs button{flex:1;padding:12px;background:none;border:none;font-size:13px;font-weight:600;color:var(--muted);border-bottom:2px solid transparent;transition:all .15s;}
+.ptabs button.active{color:var(--purple-light);border-bottom-color:var(--purple);}
 
-  .overlay{position:fixed;inset:0;background:rgba(28,27,26,.45);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px;}
-  .modal{background:var(--card);border-radius:var(--radius);padding:22px;max-width:360px;width:100%;}
-  .modal h3{margin:0 0 4px;}
-  .modal p{color:var(--muted);font-size:13px;margin:0 0 14px;}
+/* leaderboard */
+.lb-table{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.lb-header{display:grid;grid-template-columns:48px 1fr 80px 80px;padding:12px 20px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);}
+.lb-row{display:grid;grid-template-columns:48px 1fr 80px 80px;padding:14px 20px;border-bottom:1px solid var(--border);align-items:center;transition:background .15s;}
+.lb-row:last-child{border-bottom:none;}
+.lb-row:hover{background:var(--surface2);}
+.lb-row.me{background:rgba(124,58,237,.1);}
+.lb-rank{font-size:16px;font-weight:700;}
+.lb-user{display:flex;align-items:center;gap:10px;}
+.lb-av{width:34px;height:34px;border-radius:50%;background:var(--purple);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;}
+.lb-name{font-size:14px;font-weight:600;}
+.lb-meta{font-size:11px;color:var(--muted);}
+.lb-pts{font-size:15px;font-weight:700;color:var(--purple-light);text-align:right;}
+.lb-ans{font-size:13px;color:var(--muted);text-align:right;}
 
-  @media (max-width:640px){
-    nav.mainnav{order:3;width:100%;justify-content:space-between;}
-    .strap{flex-direction:column;align-items:flex-start;}
-    .strap .stat{text-align:left;}
-  }
+/* case studies */
+.cs-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:10px;transition:border-color .15s;}
+.cs-card:hover{border-color:var(--purple);}
+.cs-title{font-size:15px;font-weight:600;margin-bottom:6px;}
+.cs-meta{font-size:12px;color:var(--muted);margin-bottom:10px;}
+.cs-field{margin-bottom:6px;}
+.cs-field .fl{font-size:11px;color:var(--purple-light);font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+.cs-field .fv{font-size:13px;color:#C4C4D4;}
+.cs-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+.cs-tag{font-size:11px;background:var(--purple-dim);color:var(--purple-light);border-radius:999px;padding:3px 10px;}
+
+/* modal */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px;max-width:380px;width:100%;}
+.modal h3{font-size:18px;margin-bottom:4px;}
+.modal p{color:var(--muted);font-size:13px;margin-bottom:16px;}
+.modal .welcome{font-size:12px;color:var(--good);margin-top:6px;}
+
+@media(max-width:640px){
+  .topbar{padding:12px 16px;}
+  nav.mainnav a{padding:7px 10px;font-size:13px;}
+  .lb-header,.lb-row{grid-template-columns:40px 1fr 60px;}
+  .lb-ans{display:none;}
+  .hero-strip{flex-direction:column;align-items:flex-start;}
+}
 </style>
 </head>
 <body>
 <div id="root"></div>
-
 <script>
-/* ============================================================
-   LEADUCATE — front end. Talks to the Express API in server.js.
-   ============================================================ */
+const SUBJECTS={'Product Management':'#7C3AED','Prioritization':'#6366F1','Metrics':'#06B6D4','User Research':'#F59E0B','Growth':'#22C55E','Other':'#8B8BA7'};
+const RANK_ICONS=['🥇','🥈','🥉'];
 
-const SUBJECTS = {
-  'Product Management': '#3B6FA0',
-  'Prioritization': '#6B4FA0',
-  'Metrics': '#2F8F7A',
-  'User Research': '#B0552F',
-  'Growth': '#A0473B',
-  'Other': '#6B6760'
+let state={
+  route:'home',qId:null,
+  currentUser:localStorage.getItem('lu_user')||null,
+  questions:[],openCount:0,avgSolve:0,
+  question:null, synthesis:null, synthLoading:false,
+  profile:null, profileTab:'asked',
+  leaderboard:[],
+  caseStudies:[],
+  filter:'All',sort:'urgent',
+  draftSubject:null,
+  askMedia:null,ansMedia:null,recording:false,
+  similar:[],
+  formErr:null,authErr:null,authModal:false,
+  authMsg:null, pendingAfterAuth:null,
+  loadErr:null
 };
 
-let state = {
-  route: 'home', qId: null,
-  currentUser: localStorage.getItem('leaducate_user') || null,
-  questions: [], openCountTotal: 0, avgSolveMinutes: 0,
-  question: null,
-  profile: null, profileTab: 'asked',
-  leaderboard: [],
-  filter: 'All', sort: 'urgent',
-  draftSubject: null,
-  askMedia: null, answerMedia: null, recording: false,
-  similarMatches: [],
-  formError: null, authError: null,
-  authModal: false, pendingAfterAuth: null,
-  loadError: null
-};
-
-/* ---------------- API helper ---------------- */
-async function api(path, opts = {}) {
-  const res = await fetch('/api' + path, {
-    method: opts.method || 'GET',
-    headers: opts.body ? { 'Content-Type': 'application/json' } : undefined,
-    body: opts.body ? JSON.stringify(opts.body) : undefined
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || 'Something went wrong.');
+async function api(path,opts={}){
+  const res=await fetch('/api'+path,{method:opts.method||'GET',headers:opts.body?{'Content-Type':'application/json'}:undefined,body:opts.body?JSON.stringify(opts.body):undefined});
+  const data=await res.json().catch(()=>({}));
+  if(!res.ok) throw new Error(data.error||'Something went wrong.');
   return data;
 }
-
-async function uploadMedia(media) {
-  if (!media) return null;
-  const form = new FormData();
-  if (media.blob) form.append('file', media.blob, media.filename || 'upload');
-  else form.append('file', media.file, media.filename);
-  const res = await fetch('/api/uploads', { method: 'POST', body: form });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || 'Media upload failed.');
-  return { url: data.url, type: data.type };
+async function uploadMedia(media){
+  if(!media) return null;
+  const form=new FormData();
+  if(media.blob) form.append('file',media.blob,media.filename||'upload');
+  else form.append('file',media.file,media.filename);
+  const res=await fetch('/api/uploads',{method:'POST',body:form});
+  const data=await res.json().catch(()=>({}));
+  if(!res.ok) throw new Error(data.error||'Upload failed.');
+  return {url:data.url,type:data.type};
 }
 
-/* ---------------- routing (real hash URLs) ---------------- */
-function parseHash() {
-  const parts = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
-  const known = ['home', 'ask', 'question', 'profile', 'leaderboard'];
-  const route = known.includes(parts[0]) ? parts[0] : 'home';
-  const qId = route === 'question' && parts[1] ? Number(parts[1]) : null;
-  return { route, qId };
+function parseHash(){
+  const parts=location.hash.replace(/^#\/?/,'').split('/').filter(Boolean);
+  const known=['home','ask','question','profile','leaderboard','cases','add-case'];
+  const route=known.includes(parts[0])?parts[0]:'home';
+  const qId=route==='question'&&parts[1]?Number(parts[1]):null;
+  return{route,qId};
 }
-function navigate(route, qId) {
-  const target = '#/' + route + (qId ? '/' + qId : '');
-  if (location.hash === target) onHashChange();
-  else location.hash = target;
+function navigate(route,qId){
+  const t='#/'+route+(qId?'/'+qId:'');
+  if(location.hash===t) onHashChange(); else location.hash=t;
 }
-function onHashChange() {
-  const { route, qId } = parseHash();
-  state.route = route; state.qId = qId; state.formError = null;
-  state.askMedia = null; state.answerMedia = null; state.similarMatches = [];
-  window.scrollTo(0, 0);
+function onHashChange(){
+  const{route,qId}=parseHash();
+  state.route=route;state.qId=qId;state.formErr=null;
+  state.askMedia=null;state.ansMedia=null;state.similar=[];
+  state.synthesis=null;state.synthLoading=false;
+  window.scrollTo(0,0);
   loadRoute();
 }
-function loadRoute() {
-  if (state.route === 'home') loadHome();
-  else if (state.route === 'question') loadQuestion(state.qId);
-  else if (state.route === 'profile') loadProfile();
-  else if (state.route === 'leaderboard') loadLeaderboard();
+function loadRoute(){
+  if(state.route==='home') loadHome();
+  else if(state.route==='question') loadQuestion(state.qId);
+  else if(state.route==='profile') loadProfile();
+  else if(state.route==='leaderboard') loadLeaderboard();
+  else if(state.route==='cases') loadCases();
   else render();
 }
 
-/* ---------------- data loaders ---------------- */
-async function loadHome() {
-  render();
-  try {
-    const qs = new URLSearchParams({ sort: state.sort });
-    if (state.filter !== 'All') qs.set('subject', state.filter);
-    const data = await api('/questions?' + qs.toString());
-    state.questions = data.questions;
-    state.openCountTotal = data.openCountTotal;
-    state.avgSolveMinutes = data.avgSolveMinutes;
-    state.loadError = null;
-  } catch (e) { state.loadError = e.message; }
-  render();
-}
-async function loadQuestion(id) {
-  render();
-  try { const data = await api('/questions/' + id); state.question = data.question; state.loadError = null; }
-  catch (e) { state.question = null; state.loadError = e.message; }
-  render();
-}
-async function loadProfile() {
-  if (!state.currentUser) { render(); return; }
-  render();
-  try { const data = await api('/users/' + encodeURIComponent(state.currentUser)); state.profile = data.profile; }
-  catch (e) { state.loadError = e.message; }
-  render();
-}
-async function loadLeaderboard() {
-  render();
-  try { const data = await api('/leaderboard'); state.leaderboard = data.leaderboard; }
-  catch (e) { state.loadError = e.message; }
-  render();
-}
-async function primeStats() {
-  try { const data = await api('/questions?sort=new'); state.openCountTotal = data.openCountTotal; } catch (e) {}
-}
+async function loadHome(){render();try{const qs=new URLSearchParams({sort:state.sort});if(state.filter!=='All')qs.set('subject',state.filter);const d=await api('/questions?'+qs);state.questions=d.questions;state.openCount=d.openCountTotal;state.avgSolve=d.avgSolveMinutes;state.loadErr=null;}catch(e){state.loadErr=e.message;}render();}
+async function loadQuestion(id){render();try{const d=await api('/questions/'+id);state.question=d.question;state.loadErr=null;}catch(e){state.question=null;state.loadErr=e.message;}render();if(state.question&&state.question.answers.length>0) loadSynthesis(id);}
+async function loadSynthesis(id){state.synthLoading=true;patchSynth();try{const d=await api('/questions/'+id+'/synthesize');state.synthesis=d.synthesis;state.synthLoading=false;patchSynth();}catch(e){state.synthLoading=false;patchSynth();}}
+function patchSynth(){const el=document.getElementById('synth-box');if(el)el.innerHTML=synthHtml();}
+async function loadProfile(){if(!state.currentUser){render();return;}render();try{const d=await api('/users/'+encodeURIComponent(state.currentUser));state.profile=d.profile;}catch(e){state.loadErr=e.message;}render();}
+async function loadLeaderboard(){render();try{const d=await api('/leaderboard');state.leaderboard=d.leaderboard;}catch(e){state.loadErr=e.message;}render();}
+async function loadCases(){render();try{const d=await api('/case-studies');state.caseStudies=d.caseStudies;}catch(e){state.loadErr=e.message;}render();}
+async function primeStats(){try{const d=await api('/questions?sort=new');state.openCount=d.openCountTotal;}catch(e){}}
 
-/* ---------------- auth ---------------- */
-function requireAuth(action) {
-  if (!state.currentUser) { state.pendingAfterAuth = action; state.authModal = true; render(); return false; }
-  return true;
-}
-function openAuth() { state.authError = null; state.authModal = true; render(); }
-function closeAuth() { state.authModal = false; state.pendingAfterAuth = null; render(); }
-
-async function submitAuth(e) {
+function requireAuth(action){if(!state.currentUser){state.pendingAfterAuth=action;state.authMsg=null;state.authErr=null;state.authModal=true;render();return false;}return true;}
+function openAuth(){state.authErr=null;state.authMsg=null;state.authModal=true;render();}
+function closeAuth(){state.authModal=false;state.pendingAfterAuth=null;render();}
+async function submitAuth(e){
   e.preventDefault();
-  const name = e.target.elements.name.value.trim();
-  if (!name) return;
-  state.authSubmitting = true; render();
-  try {
-    const data = await api('/users/login', { method: 'POST', body: { name } });
-    state.currentUser = data.user.name;
-    localStorage.setItem('leaducate_user', data.user.name);
-    state.authModal = false; state.authSubmitting = false;
-    const pending = state.pendingAfterAuth; state.pendingAfterAuth = null;
-    render();
-    if (pending) pending();
-  } catch (err) { state.authSubmitting = false; state.authError = err.message; render(); }
+  const name=e.target.elements.name.value.trim();
+  if(!name) return;
+  state.authSubmitting=true;render();
+  try{
+    const d=await api('/users/login',{method:'POST',body:{name}});
+    state.currentUser=d.user.name;
+    localStorage.setItem('lu_user',d.user.name);
+    state.authModal=false;state.authSubmitting=false;
+    state.authMsg=d.isNew?'new':'returning';
+    const pending=state.pendingAfterAuth;state.pendingAfterAuth=null;
+    render();if(pending)pending();
+  }catch(err){state.authSubmitting=false;state.authErr=err.message;render();}
 }
-function signOut() { state.currentUser = null; localStorage.removeItem('leaducate_user'); navigate('home'); }
+function signOut(){state.currentUser=null;state.profile=null;localStorage.removeItem('lu_user');navigate('home');}
 
-/* ---------------- similar-question suggestions ---------------- */
-let similarTimer = null;
-function onTitleInput(value) {
-  clearTimeout(similarTimer);
-  similarTimer = setTimeout(async () => {
-    if (value.trim().length < 6) { state.similarMatches = []; patchSimilarBox(); return; }
-    try { const data = await api('/questions/search?q=' + encodeURIComponent(value)); state.similarMatches = data.matches; patchSimilarBox(); }
-    catch (e) {}
-  }, 400);
+let simTimer=null;
+function onTitleInput(v){
+  clearTimeout(simTimer);
+  simTimer=setTimeout(async()=>{
+    if(v.trim().length<6){state.similar=[];patchSim();return;}
+    try{const d=await api('/questions/search?q='+encodeURIComponent(v));state.similar=d.matches;patchSim();}catch(e){}
+  },400);
 }
-function suggestBoxHtml() {
-  if (!state.similarMatches || state.similarMatches.length === 0) return '';
-  return `<div class="suggest-box">
-    <div class="suggest-label">People already asked something similar</div>
-    ${state.similarMatches.map(m => `<a class="suggest-item" href="#/question/${m.id}">${escapeHtml(m.title)}<span class="suggest-meta">${m.status === 'solved' ? '✓ solved' : m.answerCount + ' ans'}</span></a>`).join('')}
-  </div>`;
+function patchSim(){const el=document.getElementById('similar-box');if(el)el.innerHTML=simHtml();}
+function simHtml(){
+  if(!state.similar||!state.similar.length) return '';
+  return`<div class="suggest-box"><div class="suggest-label">✦ Similar questions already asked</div>${state.similar.map(m=>`<a class="suggest-item" href="#/question/${m.id}">${esc(m.title)}<span class="suggest-meta">${m.status==='solved'?'✓ solved':m.answerCount+' ans'}</span></a>`).join('')}</div>`;
 }
-function patchSimilarBox() { const el = document.getElementById('similar-suggestions'); if (el) el.innerHTML = suggestBoxHtml(); }
 
-/* ---------------- media capture (ask) ---------------- */
-function pickAskFile(e, type) {
-  const file = e.target.files[0]; if (!file) return;
-  state.askMedia = { file, previewUrl: URL.createObjectURL(file), type, filename: file.name };
-  patchAskMediaPreview();
+function pickAskFile(e,type){const f=e.target.files[0];if(!f)return;state.askMedia={file:f,previewUrl:URL.createObjectURL(f),type,filename:f.name};patchAskPrev();}
+function removeAskMedia(){state.askMedia=null;patchAskPrev();}
+function patchAskPrev(){const el=document.getElementById('ask-prev');if(el)el.innerHTML=mediaPrevHtml(state.askMedia,'removeAskMedia()');}
+function pickAnsFile(e,type){const f=e.target.files[0];if(!f)return;state.ansMedia={file:f,previewUrl:URL.createObjectURL(f),type,filename:f.name};patchAnsPrev();}
+function removeAnsMedia(){state.ansMedia=null;patchAnsPrev();}
+function patchAnsPrev(){const el=document.getElementById('ans-prev');if(el)el.innerHTML=mediaPrevHtml(state.ansMedia,'removeAnsMedia()');}
+let recorder=null,chunks=[];
+async function startRec(){
+  try{const s=await navigator.mediaDevices.getUserMedia({audio:true});chunks=[];recorder=new MediaRecorder(s);recorder.ondataavailable=e=>chunks.push(e.data);recorder.onstop=()=>{const b=new Blob(chunks,{type:'audio/webm'});state.ansMedia={blob:b,previewUrl:URL.createObjectURL(b),type:'audio',filename:'voice.webm'};patchAnsPrev();s.getTracks().forEach(t=>t.stop());};recorder.start();state.recording=true;patchVoiceBtn();}catch(e){alert('Mic access denied: '+e.message);}
 }
-function removeAskMedia() { state.askMedia = null; patchAskMediaPreview(); }
-function patchAskMediaPreview() { const el = document.getElementById('ask-media-preview'); if (el) el.innerHTML = mediaPreviewHtml(state.askMedia, 'removeAskMedia()'); }
-
-/* ---------------- media capture (answer) ---------------- */
-function pickAnswerFile(e, type) {
-  const file = e.target.files[0]; if (!file) return;
-  state.answerMedia = { file, previewUrl: URL.createObjectURL(file), type, filename: file.name };
-  patchAnswerMediaPreview();
+function stopRec(){if(recorder)recorder.stop();state.recording=false;patchVoiceBtn();}
+function patchVoiceBtn(){const el=document.getElementById('voice-wrap');if(el)el.innerHTML=voiceBtnHtml();}
+function voiceBtnHtml(){return state.recording?`<button id="vbtn" type="button" class="mediabtn rec" onclick="stopRec()">⏹ Stop</button>`:`<button id="vbtn" type="button" class="mediabtn" onclick="startRec()">🎤 Voice</button>`;}
+function mediaPrevHtml(media,rmCall){
+  if(!media) return '';
+  let inner='';
+  if(media.type==='image') inner=`<img src="${media.previewUrl}" alt="preview">`;
+  else if(media.type==='video') inner=`<video src="${media.previewUrl}" controls></video>`;
+  else if(media.type==='audio') inner=`<audio src="${media.previewUrl}" controls></audio>`;
+  return`<div class="media-preview">${inner}<button type="button" class="rm-media" onclick="${rmCall}">Remove</button></div>`;
 }
-function removeAnswerMedia() { state.answerMedia = null; patchAnswerMediaPreview(); }
-function patchAnswerMediaPreview() { const el = document.getElementById('answer-media-preview'); if (el) el.innerHTML = mediaPreviewHtml(state.answerMedia, 'removeAnswerMedia()'); }
-
-let mediaRecorder = null, audioChunks = [];
-async function startVoiceRecording() {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    audioChunks = [];
-    mediaRecorder = new MediaRecorder(stream);
-    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-    mediaRecorder.onstop = () => {
-      const blob = new Blob(audioChunks, { type: 'audio/webm' });
-      state.answerMedia = { blob, previewUrl: URL.createObjectURL(blob), type: 'audio', filename: 'voice-note.webm' };
-      patchAnswerMediaPreview();
-      stream.getTracks().forEach(t => t.stop());
-    };
-    mediaRecorder.start();
-    state.recording = true; patchVoiceBtn();
-  } catch (e) { alert("Couldn't access your microphone: " + e.message); }
-}
-function stopVoiceRecording() { if (mediaRecorder) mediaRecorder.stop(); state.recording = false; patchVoiceBtn(); }
-function voiceButtonHtml() {
-  return state.recording
-    ? `<button id="voice-btn" type="button" class="mediabtn recording" onclick="stopVoiceRecording()">⏹ Stop recording</button>`
-    : `<button id="voice-btn" type="button" class="mediabtn" onclick="startVoiceRecording()">🎤 Voice note</button>`;
-}
-function patchVoiceBtn() { const el = document.getElementById('voice-btn-wrap'); if (el) el.innerHTML = voiceButtonHtml(); }
-
-function mediaPreviewHtml(media, removeCall) {
-  if (!media) return '';
-  let inner = '';
-  if (media.type === 'image') inner = `<img src="${media.previewUrl}" alt="attached photo">`;
-  else if (media.type === 'video') inner = `<video src="${media.previewUrl}" controls></video>`;
-  else if (media.type === 'audio') inner = `<audio src="${media.previewUrl}" controls></audio>`;
-  return `<div class="media-preview">${inner}<button type="button" class="remove-media" onclick="${removeCall}">Remove</button></div>`;
-}
-function mediaBlockHtml(media) {
-  if (!media) return '';
-  if (media.type === 'image') return `<div class="qmedia"><img src="${media.url}" alt="attached image"></div>`;
-  if (media.type === 'video') return `<div class="qmedia"><video src="${media.url}" controls></video></div>`;
-  if (media.type === 'audio') return `<div class="qmedia"><audio src="${media.url}" controls></audio></div>`;
+function mediaBlockHtml(m){
+  if(!m) return '';
+  if(m.type==='image') return`<div class="qmedia"><img src="${m.url}" alt="attachment"></div>`;
+  if(m.type==='video') return`<div class="qmedia"><video src="${m.url}" controls></video></div>`;
+  if(m.type==='audio') return`<div class="qmedia"><audio src="${m.url}" controls></audio></div>`;
   return '';
 }
 
-/* ---------------- reporting ---------------- */
-async function reportContent(qId, answerId) {
-  if (!confirm('Report this content as inappropriate or a scam? Enough reports will remove it automatically.')) return;
-  try {
-    const data = await api('/questions/' + qId + '/report', { method: 'POST', body: answerId ? { answerId } : {} });
-    if (data.hidden) alert('This content was removed after multiple reports.');
-    await loadQuestion(qId);
-  } catch (err) { alert(err.message); }
+async function reportContent(qId,answerId){
+  if(!confirm('Report this as inappropriate? After 3 reports it will be removed automatically.')) return;
+  try{const d=await api('/questions/'+qId+'/report',{method:'POST',body:answerId?{answerId}:{}});if(d.hidden)alert('Removed after multiple reports.');await loadQuestion(qId);}catch(err){alert(err.message);}
+}
+async function deleteAnswer(qId,ansId){
+  if(!confirm('Delete your answer? This cannot be undone.')) return;
+  try{await api('/questions/'+qId+'/answers/'+ansId,{method:'DELETE',body:{author:state.currentUser}});await loadQuestion(qId);}catch(err){alert(err.message);}
 }
 
-/* ---------------- actions ---------------- */
-function pickSubject(s) { state.draftSubject = s; render(); }
-
-async function postQuestion(e) {
+function pickSubject(s){state.draftSubject=s;render();}
+async function postQuestion(e){
   e.preventDefault();
-  const form = e.target;
-  const title = form.elements.title.value.trim();
-  const body = form.elements.body.value.trim();
-  const subject = state.draftSubject || 'Other';
-
-  const doPost = async () => {
-    try {
-      let media = null;
-      if (state.askMedia) media = await uploadMedia(state.askMedia);
-      await api('/questions', { method: 'POST', body: { title, body, subject, author: state.currentUser, media } });
-      state.draftSubject = null; state.askMedia = null; state.formError = null;
-      navigate('home');
-    } catch (err) { state.formError = err.message; render(); }
-  };
-
-  if (!requireAuth(doPost)) return;
-  await doPost();
+  const form=e.target,title=form.elements.title.value.trim(),body=form.elements.body.value.trim(),subject=state.draftSubject||'Other';
+  const doPost=async()=>{try{let media=null;if(state.askMedia)media=await uploadMedia(state.askMedia);await api('/questions',{method:'POST',body:{title,body,subject,author:state.currentUser,media}});state.draftSubject=null;state.askMedia=null;state.formErr=null;navigate('home');}catch(err){state.formErr=err.message;render();}};
+  if(!requireAuth(doPost))return;await doPost();
 }
-
-async function postAnswer(e, qId) {
+async function postAnswer(e,qId){
   e.preventDefault();
-  const text = e.target.elements.text.value.trim();
-  if (!text && !state.answerMedia) return;
-
-  const doPost = async () => {
-    try {
-      let media = null;
-      if (state.answerMedia) media = await uploadMedia(state.answerMedia);
-      await api('/questions/' + qId + '/answers', { method: 'POST', body: { author: state.currentUser, text, media } });
-      state.answerMedia = null;
-      await loadQuestion(qId);
-    } catch (err) { state.formError = err.message; render(); }
+  const text=e.target.elements.text.value.trim();
+  if(!text&&!state.ansMedia)return;
+  const doPost=async()=>{try{let media=null;if(state.ansMedia)media=await uploadMedia(state.ansMedia);await api('/questions/'+qId+'/answers',{method:'POST',body:{author:state.currentUser,text,media}});state.ansMedia=null;e.target.reset();await loadQuestion(qId);}catch(err){state.formErr=err.message;render();}};
+  if(!requireAuth(doPost))return;await doPost();
+}
+async function markBest(qId,ansId){try{await api('/questions/'+qId+'/answers/'+ansId+'/best',{method:'POST',body:{author:state.currentUser}});await loadQuestion(qId);}catch(err){alert(err.message);}
+}
+async function submitCase(e){
+  e.preventDefault();
+  const f=e.target;
+  const doPost=async()=>{
+    const tags=f.elements.tags.value.split(',').map(t=>t.trim()).filter(Boolean);
+    try{await api('/case-studies',{method:'POST',body:{author:state.currentUser,title:f.elements.title.value.trim(),industry:f.elements.industry.value.trim(),problem:f.elements.problem.value.trim(),framework:f.elements.framework.value.trim(),metric:f.elements.metric.value.trim(),decision:f.elements.decision.value.trim(),outcome:f.elements.outcome.value.trim(),tags}});navigate('cases');}
+    catch(err){state.formErr=err.message;render();}
   };
+  if(!requireAuth(doPost))return;await doPost();
+}
+async function likeCase(id){if(!requireAuth(()=>{}))return;try{await api('/case-studies/'+id+'/like',{method:'POST',body:{author:state.currentUser}});await loadCases();}catch(e){}}
 
-  if (!requireAuth(doPost)) return;
-  await doPost();
+function setFilter(s){state.filter=s;loadHome();}
+function setSort(s){state.sort=s;loadHome();}
+function setTab(t){state.profileTab=t;render();}
+function ini(n){return n.split(' ').map(p=>p[0]).join('').slice(0,2).toUpperCase();}
+function elInfo(q){
+  if(q.status==='solved'&&q.solvedAt){const m=Math.round((q.solvedAt-q.createdAt)/60000);return{text:fmt(m)+' to solve',cls:'solved'};}
+  const m=Math.floor((Date.now()-q.createdAt)/60000);
+  return{text:fmt(m)+' open',cls:m>=30?'hot':m>=10?'warn':'good'};
+}
+function fmt(m){if(m<1)return'<1m';if(m<60)return m+'m';return Math.floor(m/60)+'h '+(m%60)+'m';}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function synthHtml(){
+  if(state.synthLoading) return`<div class="ai-box"><div class="ai-label">✦ AI Synthesis</div><div class="ai-loading">Synthesizing answers…</div></div>`;
+  if(!state.synthesis) return'';
+  return`<div class="ai-box"><div class="ai-label">✦ AI Synthesized Answer</div><div class="ai-text">${esc(state.synthesis)}</div></div>`;
 }
 
-async function markBest(qId, ansId) {
-  try { await api('/questions/' + qId + '/answers/' + ansId + '/best', { method: 'POST', body: { author: state.currentUser } }); await loadQuestion(qId); }
-  catch (err) { state.loadError = err.message; render(); }
-}
+const LOGO_SVG=`<svg class="logo-icon" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><rect width="32" height="32" rx="9" fill="#7C3AED"/><path d="M6 17l5-5 9 9 6-10" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="25" cy="8" r="3" fill="#A78BFA"/></svg>`;
 
-async function deleteAnswer(qId, ansId) {
-  if (!confirm('Delete this answer? You'll lose 5 points.')) return;
-  try {
-    await api('/questions/' + qId + '/answers/' + ansId + '/delete', { method: 'POST', body: { author: state.currentUser } });
-    await loadQuestion(qId);
-  } catch (err) { state.loadError = err.message; render(); }
-}
-
-function setFilter(s) { state.filter = s; loadHome(); }
-function setSort(s) { state.sort = s; loadHome(); }
-function setProfileTab(t) { state.profileTab = t; render(); }
-
-/* ---------------- helpers ---------------- */
-function initials(name) { return name.split(' ').map(p => p[0]).join('').slice(0, 2).toUpperCase(); }
-function elapsedInfo(q) {
-  if (q.status === 'solved' && q.solvedAt) {
-    const m = Math.round((q.solvedAt - q.createdAt) / 60000);
-    return { text: fmtMins(m) + ' to solve', cls: 'solved' };
-  }
-  const m = Math.floor((Date.now() - q.createdAt) / 60000);
-  let cls = 'good'; if (m >= 30) cls = 'signal'; else if (m >= 10) cls = 'warn';
-  return { text: fmtMins(m) + ' open', cls };
-}
-function fmtMins(m) { if (m < 1) return '<1m'; if (m < 60) return m + 'm'; return Math.floor(m / 60) + 'h ' + (m % 60) + 'm'; }
-function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
-const LOGO_SVG = `<svg class="logo-mark" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="30" height="30" rx="8" fill="var(--ink)"/><path d="M9 17l5 5 9-11" stroke="var(--paper)" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-
-/* ---------------- views ---------------- */
-function viewTopbar() {
-  const links = [['home', 'Home'], ['ask', 'Ask a doubt'], ['leaderboard', 'Leaderboard'], ['profile', 'Profile']];
-  return `
-  <div class="topbar">
-    <div class="brand">
-      <a class="name" href="#/home">${LOGO_SVG}Leaducate</a>
-      <span class="tag">minutes, not hours</span>
-    </div>
-    <nav class="mainnav">${links.map(([r, l]) => `<a href="#/${r}" class="${state.route === r ? 'active' : ''}">${l}</a>`).join('')}</nav>
+function viewTopbar(){
+  const links=[['home','Home'],['ask','Ask'],['cases','Case Studies'],['leaderboard','Leaderboard'],['profile','Profile']];
+  return`<div class="topbar">
+    <a href="#/home" class="logo-wrap">
+      ${LOGO_SVG}
+      <span class="logo-text">Lead<span>u</span>cate</span>
+    </a>
+    <nav class="mainnav">${links.map(([r,l])=>`<a href="#/${r}" class="${state.route===r?'active':''}">${l}</a>`).join('')}</nav>
     <div class="session">
-      <span class="pulse-pill"><span class="pulse-dot"></span>${state.openCountTotal} open now</span>
-      ${state.currentUser
-        ? `<button class="btn btn-ghost" onclick="signOut()">${escapeHtml(state.currentUser)} · sign out</button>`
-        : `<button class="btn btn-signal" onclick="openAuth()">Sign in</button>`}
+      <span class="live-pill"><span class="live-dot"></span>${state.openCount} live</span>
+      ${state.currentUser?`<button class="btn btn-ghost" onclick="signOut()">${esc(state.currentUser)} · out</button>`:`<button class="btn btn-primary" onclick="openAuth()">Sign in</button>`}
     </div>
   </div>`;
 }
 
-function viewHome() {
-  if (state.loadError) return `<div class="empty"><div class="display">Couldn't load the feed</div><p>${escapeHtml(state.loadError)}</p></div>`;
-  const list = state.questions;
-  return `
-  <div class="strap">
-    <div><h1>Live doubt feed</h1><p>Real questions, right now. Jump in and help — or post your own.</p></div>
-    <div class="stat"><div class="num">${state.avgSolveMinutes || '—'}${state.avgSolveMinutes ? 'm' : ''}</div><div class="lbl">avg time to solve</div></div>
+function viewHome(){
+  if(state.loadErr) return`<div class="empty"><h3>Couldn't load feed</h3><p>${esc(state.loadErr)}</p></div>`;
+  const list=state.questions;
+  return`
+  <div class="hero-strip">
+    <div><h1>Live doubt feed</h1><p style="color:var(--muted);font-size:13px;margin-top:4px;">Questions from the PM community — answer one, earn points.</p></div>
+    <div class="hero-stat"><div class="num">${state.avgSolve||'—'}${state.avgSolve?'m':''}</div><div class="lbl">avg solve time</div></div>
   </div>
   <div class="filters">
-    <button class="chip ${state.filter === 'All' ? 'active' : ''}" onclick="setFilter('All')">All</button>
-    ${Object.keys(SUBJECTS).map(s => `<button class="chip ${state.filter === s ? 'active' : ''}" onclick="setFilter('${s}')">${s}</button>`).join('')}
+    <button class="chip ${state.filter==='All'?'active':''}" onclick="setFilter('All')">All</button>
+    ${Object.keys(SUBJECTS).map(s=>`<button class="chip ${state.filter===s?'active':''}" onclick="setFilter('${s}')">${s}</button>`).join('')}
   </div>
   <div class="sortrow">
-    <span class="lbl">${list.length} doubt${list.length === 1 ? '' : 's'}</span>
-    <span class="lbl">sort:
-      <a href="#" onclick="setSort('urgent');return false;" style="${state.sort === 'urgent' ? 'font-weight:700;color:var(--ink)' : ''}">most urgent</a> ·
-      <a href="#" onclick="setSort('new');return false;" style="${state.sort === 'new' ? 'font-weight:700;color:var(--ink)' : ''}">newest</a>
-    </span>
+    <span>${list.length} doubt${list.length===1?'':'s'}</span>
+    <span>Sort: <a href="#" class="${state.sort==='urgent'?'active-sort':''}" onclick="setSort('urgent');return false">urgent</a> · <a href="#" class="${state.sort==='new'?'active-sort':''}" onclick="setSort('new');return false">newest</a></span>
   </div>
-  ${list.length === 0 ? `<div class="empty"><div class="display">No doubts match this filter yet</div><p>Try a different subject, or be the first to ask one.</p></div>` :
-    list.map(q => { const info = elapsedInfo(q); return `
-      <a class="card qcard" href="#/question/${q.id}">
-        <div class="subj"><span class="dot" style="background:${SUBJECTS[q.subject] || SUBJECTS.Other}"></span>${q.subject}</div>
-        <div class="qtitle">${escapeHtml(q.title)}</div>
-        <div class="qsnippet">${escapeHtml(q.body)}</div>
-        <div class="qmeta">
-          <span>${escapeHtml(q.author)} · ${q.answerCount} answer${q.answerCount === 1 ? '' : 's'} ${q.media ? '· 📎' : ''}</span>
-          <span class="timer ${info.cls}">${info.text}</span>
+  ${!list.length?`<div class="empty"><h3>No doubts here yet</h3><p>Be the first to ask one.</p></div>`:
+  list.map(q=>{const info=elInfo(q);return`
+    <a class="qcard" href="#/question/${q.id}">
+      <div class="subj-row"><span class="subj-dot" style="background:${SUBJECTS[q.subject]||SUBJECTS.Other}"></span>${q.subject}</div>
+      <div class="qtitle">${esc(q.title)}</div>
+      <div class="qsnip">${esc(q.body)}</div>
+      <div class="qmeta"><span>${esc(q.author)} · ${q.answerCount} ans${q.media?' · 📎':''}</span><span class="timer ${info.cls}">${info.text}</span></div>
+    </a>`}).join('')}`;
+}
+
+function viewAsk(){
+  return`<div class="form-wrap">
+    <h1>Ask a doubt</h1>
+    <p class="sub">Be specific — clearer the question, faster you'll get an answer.</p>
+    <div class="card">
+      ${state.formErr?`<div class="err" style="margin-bottom:12px">${esc(state.formErr)}</div>`:''}
+      <form onsubmit="postQuestion(event)">
+        <label>Question title</label>
+        <input type="text" name="title" placeholder="e.g. RICE vs MoSCoW for prioritization?" oninput="onTitleInput(this.value)">
+        <div id="similar-box">${simHtml()}</div>
+        <label>Subject</label>
+        <div class="subjpick">${Object.keys(SUBJECTS).map(s=>`<button type="button" class="${state.draftSubject===s?'active':''}" onclick="pickSubject('${s}')">${s}</button>`).join('')}</div>
+        <label>Details</label>
+        <textarea name="body" placeholder="What have you tried? Where exactly are you stuck?" style="min-height:120px"></textarea>
+        <label>Attach (optional)</label>
+        <input type="file" id="ask-photo" accept="image/*" capture="environment" style="display:none" onchange="pickAskFile(event,'image')">
+        <input type="file" id="ask-video" accept="video/*" capture="environment" style="display:none" onchange="pickAskFile(event,'video')">
+        <div class="mediabar">
+          <button type="button" class="mediabtn" onclick="document.getElementById('ask-photo').click()">📷 Photo</button>
+          <button type="button" class="mediabtn" onclick="document.getElementById('ask-video').click()">🎥 Video</button>
         </div>
-      </a>`; }).join('')}`;
+        <div id="ask-prev">${mediaPrevHtml(state.askMedia,'removeAskMedia()')}</div>
+        <div class="formfoot">
+          <button type="button" class="btn btn-ghost" onclick="navigate('home')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Post doubt</button>
+        </div>
+      </form>
+    </div>
+  </div>`;
 }
 
-function viewAsk() {
-  const subj = state.draftSubject;
-  return `
-  <h1 style="font-size:20px;margin-bottom:2px;">Ask a doubt</h1>
-  <p style="color:var(--muted);font-size:13px;margin-top:0;">Be specific — the clearer the question, the faster someone can answer it.</p>
-  <form class="card formcard" onsubmit="postQuestion(event)">
-    ${state.formError ? `<div class="err" style="margin-bottom:10px;">${escapeHtml(state.formError)}</div>` : ''}
-    <label for="title">What's the question, in one line?</label>
-    <input type="text" id="title" name="title" placeholder="e.g. RICE vs MoSCoW for prioritization?" oninput="onTitleInput(this.value)">
-    <div id="similar-suggestions">${suggestBoxHtml()}</div>
-
-    <label>Subject</label>
-    <div class="subjpick">${Object.keys(SUBJECTS).map(s => `<button type="button" class="${subj === s ? 'active' : ''}" onclick="pickSubject('${s}')">${s}</button>`).join('')}</div>
-
-    <label for="body">Add the details</label>
-    <textarea id="body" name="body" placeholder="What have you tried? Where exactly are you stuck?"></textarea>
-
-    <label>Attach a photo or video (optional)</label>
-    <input type="file" id="ask-photo-input" accept="image/*" capture="environment" style="display:none" onchange="pickAskFile(event,'image')">
-    <input type="file" id="ask-video-input" accept="video/*" capture="environment" style="display:none" onchange="pickAskFile(event,'video')">
-    <div class="mediabar">
-      <button type="button" class="mediabtn" onclick="document.getElementById('ask-photo-input').click()">📷 Photo</button>
-      <button type="button" class="mediabtn" onclick="document.getElementById('ask-video-input').click()">🎥 Video</button>
-    </div>
-    <div id="ask-media-preview">${mediaPreviewHtml(state.askMedia, 'removeAskMedia()')}</div>
-
-    <div class="formfoot">
-      <button type="button" class="btn btn-ghost" onclick="navigate('home')">Cancel</button>
-      <button type="submit" class="btn btn-signal">Post doubt</button>
-    </div>
-  </form>`;
-}
-
-function viewQuestion() {
-  if (!state.question) return `<div class="empty"><div class="display">${state.loadError ? escapeHtml(state.loadError) : 'Loading…'}</div><p><a href="#/home">Back to the feed</a></p></div>`;
-  const q = state.question;
-  const info = elapsedInfo(q);
-  const isAuthor = state.currentUser === q.author;
-  return `
+function viewQuestion(){
+  if(!state.question) return`<div class="empty"><h3>${state.loadErr?esc(state.loadErr):'Loading…'}</h3><p><a href="#/home" style="color:var(--purple-light)">← Back to feed</a></p></div>`;
+  const q=state.question,info=elInfo(q),isAuthor=state.currentUser===q.author;
+  return`
   <div class="card">
-    <div class="subj"><span class="dot" style="background:${SUBJECTS[q.subject] || SUBJECTS.Other}"></span>${q.subject} · <span class="badge-status">${q.status === 'solved' ? 'Solved' : 'Open'}</span></div>
-    <h2 class="qfull-title">${escapeHtml(q.title)}</h2>
-    <p class="qfull-body">${escapeHtml(q.body)}</p>
+    <div class="subj-row"><span class="subj-dot" style="background:${SUBJECTS[q.subject]||SUBJECTS.Other}"></span>${q.subject} · <span class="status-badge ${q.status==='solved'?'solved':''}">${q.status==='solved'?'Solved':'Open'}</span></div>
+    <h2 class="qfull-title">${esc(q.title)}</h2>
+    <p class="qfull-body">${esc(q.body)}</p>
     ${mediaBlockHtml(q.media)}
     <div class="qmeta">
-      <span>Asked by ${escapeHtml(q.author)} ${!isAuthor ? `· <button class="report-link" onclick="reportContent(${q.id})">Report</button>` : ''}</span>
+      <span>Asked by ${esc(q.author)} ${!isAuthor?`· <button class="report-btn" onclick="reportContent(${q.id})">Report</button>`:''}
+      </span>
       <span class="timer ${info.cls}">${info.text}</span>
     </div>
   </div>
-  <div class="answers">
-    <h3>${q.answers.length} answer${q.answers.length === 1 ? '' : 's'}</h3>
-    ${q.answers.length === 0 ? `<div class="empty" style="padding:24px 0;"><div class="display" style="font-size:15px;">No answers yet</div><p>Be the first to help — points start the moment you reply.</p></div>` : ''}
-    ${q.answers.map(a => `
+  <div id="synth-box">${synthHtml()}</div>
+  <div class="answers-section">
+    <h3>${q.answers.length} Answer${q.answers.length===1?'':'s'}</h3>
+    ${!q.answers.length?`<div class="empty" style="padding:30px 0"><h3 style="font-size:16px">No answers yet</h3><p>Be the first to help — earn 5 points.</p></div>`:''}
+    ${q.answers.map(a=>`
       <div class="ans">
-        <div class="avatar">${initials(a.author)}</div>
-        <div class="ans-body">
+        <div class="av">${ini(a.author)}</div>
+        <div class="ans-card ${a.isBest?'best':''}">
           <div class="ans-head">
-            <span class="ans-author">${escapeHtml(a.author)} ${a.isBest ? '<span class="ans-best">✓ best answer</span>' : ''}</span>
-            <span style="display:flex;gap:8px;align-items:center;">
-              ${(isAuthor && q.status !== 'solved') ? `<button class="mark-btn" onclick="markBest(${q.id},${a.id})">Mark as best</button>` : ''}
-              ${state.currentUser === a.author ? `<button class="report-link" onclick="deleteAnswer(${q.id},${a.id})">Delete</button>` : ''}
-              ${state.currentUser !== a.author ? `<button class="report-link" onclick="reportContent(${q.id},${a.id})">Report</button>` : ''}
+            <span class="ans-author">${esc(a.author)} ${a.isBest?'<span class="best-badge">✓ Best Answer</span>':''}</span>
+            <span class="ans-actions">
+              ${isAuthor&&q.status!=='solved'?`<button class="mark-btn" onclick="markBest(${q.id},${a.id})">Mark best</button>`:''}
+              ${state.currentUser===a.author&&!a.isBest?`<button class="del-btn" onclick="deleteAnswer(${q.id},${a.id})">Delete</button>`:''}
+              ${state.currentUser&&state.currentUser!==a.author?`<button class="report-btn" onclick="reportContent(${q.id},${a.id})">Report</button>`:''}
             </span>
           </div>
-          ${a.text ? `<div>${escapeHtml(a.text)}</div>` : ''}
+          ${a.text?`<div style="font-size:14px;color:#C4C4D4">${esc(a.text)}</div>`:''}
           ${mediaBlockHtml(a.media)}
         </div>
       </div>`).join('')}
-    ${q.status !== 'solved' ? `
-    <form class="ansform" onsubmit="postAnswer(event, ${q.id})" style="flex-direction:column;">
-      <textarea name="text" placeholder="${state.currentUser ? 'Write an answer…' : 'Sign in to answer…'}" rows="1"></textarea>
-      <input type="file" id="answer-photo-input" accept="image/*" capture="environment" style="display:none" onchange="pickAnswerFile(event,'image')">
-      <input type="file" id="answer-video-input" accept="video/*" capture="environment" style="display:none" onchange="pickAnswerFile(event,'video')">
-      <div class="mediabar">
-        <button type="button" class="mediabtn" onclick="document.getElementById('answer-photo-input').click()">📷 Photo</button>
-        <button type="button" class="mediabtn" onclick="document.getElementById('answer-video-input').click()">🎥 Video</button>
-        <span id="voice-btn-wrap">${voiceButtonHtml()}</span>
-      </div>
-      <div id="answer-media-preview">${mediaPreviewHtml(state.answerMedia, 'removeAnswerMedia()')}</div>
-      <div class="formfoot" style="margin-top:10px;"><button class="btn btn-signal" type="submit">Reply</button></div>
-    </form>
-    ${state.formError ? `<div class="err">${escapeHtml(state.formError)}</div>` : ''}` :
-    `<p style="color:var(--muted);font-size:13px;">This doubt is solved — nice work, ${escapeHtml(q.answers.find(a => a.isBest)?.author || '')}.</p>`}
+    ${q.status!=='solved'?`
+    <div class="ansform-wrap">
+      <form onsubmit="postAnswer(event,${q.id})">
+        <label>Your answer</label>
+        <textarea name="text" placeholder="${state.currentUser?'Write your answer…':'Sign in to answer…'}" style="min-height:80px"></textarea>
+        <input type="file" id="ans-photo" accept="image/*" capture="environment" style="display:none" onchange="pickAnsFile(event,'image')">
+        <input type="file" id="ans-video" accept="video/*" capture="environment" style="display:none" onchange="pickAnsFile(event,'video')">
+        <div class="mediabar" style="margin-top:10px">
+          <button type="button" class="mediabtn" onclick="document.getElementById('ans-photo').click()">📷 Photo</button>
+          <button type="button" class="mediabtn" onclick="document.getElementById('ans-video').click()">🎥 Video</button>
+          <span id="voice-wrap">${voiceBtnHtml()}</span>
+        </div>
+        <div id="ans-prev">${mediaPrevHtml(state.ansMedia,'removeAnsMedia()')}</div>
+        <div class="formfoot"><button type="submit" class="btn btn-primary">Reply</button></div>
+      </form>
+    </div>
+    ${state.formErr?`<div class="err">${esc(state.formErr)}</div>`:''}`:
+    `<p style="color:var(--muted);font-size:13px;margin-top:12px">This doubt is solved ✓ — nice work, ${esc(q.answers.find(a=>a.isBest)?.author||'')}.</p>`}
   </div>`;
 }
 
-function viewProfile() {
-  if (!state.currentUser) return `<div class="empty"><div class="display">Sign in to see your profile</div><p><button class="btn btn-signal" onclick="openAuth()">Sign in</button></p></div>`;
-  if (!state.profile) return `<div class="empty"><div class="display">${state.loadError ? escapeHtml(state.loadError) : 'Loading…'}</div></div>`;
-  const p = state.profile;
-  return `
+function viewProfile(){
+  if(!state.currentUser) return`<div class="empty"><h3>Sign in to see your profile</h3><button class="btn btn-primary" style="margin-top:16px" onclick="openAuth()">Sign in</button></div>`;
+  if(!state.profile) return`<div class="empty"><h3>Loading…</h3></div>`;
+  const p=state.profile;
+  return`
   <div class="profile-card">
     <div class="profile-banner"></div>
-    <div class="profile-body">
-      <div class="profile-avatar-lg">${initials(p.name)}</div>
-      <h2 class="profile-name">${escapeHtml(p.name)}</h2>
-      <span class="badge-chip">${p.badge}</span>
-      <div class="profile-stats-row">
-        <div><div class="num">${p.points}</div><div class="lbl">points</div></div>
-        <div><div class="num">${p.asked.length}</div><div class="lbl">asked</div></div>
-        <div><div class="num">${p.answered.length}</div><div class="lbl">answered</div></div>
+    <div class="profile-inner">
+      <div class="profile-av">${ini(p.name)}</div>
+      <div class="profile-name">${esc(p.name)}</div>
+      <span class="badge-pill">${p.badge}</span>
+      <div class="pstats">
+        <div class="pstat"><div class="num">${p.points}</div><div class="lbl">Points</div></div>
+        <div class="pstat"><div class="num">${p.asked.length}</div><div class="lbl">Asked</div></div>
+        <div class="pstat"><div class="num">${p.answered.length}</div><div class="lbl">Answered</div></div>
       </div>
-      <div class="tags">${(p.skills.length ? p.skills : ['No skill tags yet']).map(s => `<span class="tag">${escapeHtml(s)}</span>`).join('')}</div>
+      <div class="skills-row">${(p.skills.length?p.skills:['No skills yet']).map(s=>`<span class="skill-tag">${esc(s)}</span>`).join('')}</div>
     </div>
   </div>
   <div class="ptabs">
-    <button class="${state.profileTab === 'asked' ? 'active' : ''}" onclick="setProfileTab('asked')">Your doubts (${p.asked.length})</button>
-    <button class="${state.profileTab === 'answered' ? 'active' : ''}" onclick="setProfileTab('answered')">Helped with (${p.answered.length})</button>
+    <button class="${state.profileTab==='asked'?'active':''}" onclick="setTab('asked')">Doubts asked (${p.asked.length})</button>
+    <button class="${state.profileTab==='answered'?'active':''}" onclick="setTab('answered')">Helped with (${p.answered.length})</button>
   </div>
-  ${state.profileTab === 'asked'
-    ? (p.asked.length === 0 ? `<p style="color:var(--muted);font-size:13px;">You haven't asked anything yet.</p>` :
-       p.asked.map(q => `<a class="card qcard" style="display:block;" href="#/question/${q.id}"><div class="qtitle" style="font-size:14px;">${escapeHtml(q.title)}</div><div class="qmeta"><span>${q.subject}</span><span class="badge-status">${q.status}</span></div></a>`).join(''))
-    : (p.answered.length === 0 ? `<p style="color:var(--muted);font-size:13px;">No answers posted yet — the feed is waiting.</p>` :
-       p.answered.map(q => `<a class="card qcard" style="display:block;" href="#/question/${q.id}"><div class="qtitle" style="font-size:14px;">${escapeHtml(q.title)}</div></a>`).join(''))}`;
+  ${state.profileTab==='asked'
+    ?(p.asked.length?p.asked.map(q=>`<a class="qcard" href="#/question/${q.id}"><div class="subj-row"><span class="subj-dot" style="background:${SUBJECTS[q.subject]||SUBJECTS.Other}"></span>${q.subject}</div><div class="qtitle" style="font-size:14px">${esc(q.title)}</div><div class="qmeta"><span class="status-badge ${q.status==='solved'?'solved':''}">${q.status}</span></div></a>`).join(''):`<p style="color:var(--muted);font-size:13px">No doubts asked yet.</p>`)
+    :(p.answered.length?p.answered.map(q=>`<a class="qcard" href="#/question/${q.id}"><div class="qtitle" style="font-size:14px">${esc(q.title)}</div></a>`).join(''):`<p style="color:var(--muted);font-size:13px">No answers posted yet.</p>`)}`;
 }
 
-function viewLeaderboard() {
-  return `
-  <h1 style="font-size:20px;">Leaderboard</h1>
-  <p style="color:var(--muted);font-size:13px;margin-top:-4px;">Ranked by points earned helping others.</p>
-  <div class="card">
-    ${state.leaderboard.map((u, i) => `
-      <div class="lb-row ${u.name === state.currentUser ? 'me' : ''}">
-        <div class="lb-rank">${i + 1}</div>
-        <div class="avatar" style="width:28px;height:28px;font-size:11px;">${initials(u.name)}</div>
-        <div class="lb-name">${escapeHtml(u.name)}${u.name === state.currentUser ? ' (you)' : ''}<br><span class="badge-chip" style="margin-top:2px;">${u.badge}</span></div>
-        <div class="lb-pts">${u.points} pts</div>
-      </div>`).join('')}
-  </div>`;
-}
-
-function viewAuthModal() {
-  if (!state.authModal) return '';
-  return `
-  <div class="overlay" onclick="if(event.target===this)closeAuth()">
-    <form class="modal" onsubmit="submitAuth(event)">
-      <h3>Sign in</h3>
-      <p>No password yet — this is an early build. Just tell us your name.</p>
-      ${state.authError ? `<div class="err" style="margin-bottom:10px;">${escapeHtml(state.authError)}</div>` : ''}
-      <input type="text" name="name" placeholder="Your name" autofocus ${state.authSubmitting ? 'disabled' : ''}>
-      <div class="formfoot">
-        <button type="button" class="btn btn-ghost" onclick="closeAuth()" ${state.authSubmitting ? 'disabled' : ''}>Cancel</button>
-        <button type="submit" class="btn btn-signal" ${state.authSubmitting ? 'disabled' : ''}>${state.authSubmitting ? 'Signing in…' : 'Continue'}</button>
+function viewLeaderboard(){
+  return`
+  <h1 style="font-size:22px;margin-bottom:4px">Leaderboard</h1>
+  <p style="color:var(--muted);font-size:13px;margin-bottom:20px">Ranked by points earned helping the community.</p>
+  <div class="lb-table">
+    <div class="lb-header"><span>Rank</span><span>User</span><span style="text-align:right">Answers</span><span style="text-align:right">Points</span></div>
+    ${state.leaderboard.map((u,i)=>`
+    <div class="lb-row ${u.name===state.currentUser?'me':''}">
+      <div class="lb-rank">${i<3?RANK_ICONS[i]:i+1}</div>
+      <div class="lb-user">
+        <div class="lb-av" style="background:${i===0?'#F59E0B':i===1?'#9CA3AF':i===2?'#CD7C2F':'var(--purple)'}">${ini(u.name)}</div>
+        <div><div class="lb-name">${esc(u.name)}${u.name===state.currentUser?' (you)':''}</div><div class="lb-meta"><span class="badge-pill" style="font-size:10px;padding:2px 8px">${u.badge}</span></div></div>
       </div>
-    </form>
+      <div class="lb-ans">${u.answersGiven}</div>
+      <div class="lb-pts">${u.points}</div>
+    </div>`).join('')}
   </div>`;
 }
 
-function render() {
-  let page = '';
-  if (state.route === 'home') page = viewHome();
-  else if (state.route === 'ask') page = viewAsk();
-  else if (state.route === 'question') page = viewQuestion();
-  else if (state.route === 'profile') page = viewProfile();
-  else if (state.route === 'leaderboard') page = viewLeaderboard();
-  document.getElementById('root').innerHTML = `${viewTopbar()}<main>${page}</main>${viewAuthModal()}`;
+function viewCases(){
+  return`
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+    <div><h1 style="font-size:22px;margin-bottom:4px">PM Case Studies</h1><p style="color:var(--muted);font-size:13px">Real decisions, real outcomes — from the community.</p></div>
+    <a href="#/add-case" class="btn btn-primary">+ Add yours</a>
+  </div>
+  ${state.loadErr?`<div class="empty"><h3>${esc(state.loadErr)}</h3></div>`:''}
+  ${!state.caseStudies.length?`<div class="empty"><h3>No case studies yet</h3><p>Be the first to add one — earn 10 points.</p></div>`:
+  state.caseStudies.map(c=>`
+    <div class="cs-card">
+      <div class="cs-title">${esc(c.title)}</div>
+      <div class="cs-meta">${esc(c.author)} · ${esc(c.industry)} · ${new Date(c.createdAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</div>
+      <div class="cs-field"><span class="fl">Problem</span><div class="fv">${esc(c.problem)}</div></div>
+      ${c.framework?`<div class="cs-field"><span class="fl">Framework</span><div class="fv">${esc(c.framework)}</div></div>`:''}
+      ${c.decision?`<div class="cs-field"><span class="fl">Decision</span><div class="fv">${esc(c.decision)}</div></div>`:''}
+      <div class="cs-field"><span class="fl">Outcome</span><div class="fv">${esc(c.outcome)}</div></div>
+      ${c.tags&&c.tags.length?`<div class="cs-tags">${c.tags.map(t=>`<span class="cs-tag">${esc(t)}</span>`).join('')}</div>`:''}
+      <div style="margin-top:12px"><button class="btn btn-ghost btn-sm" onclick="likeCase(${c.id})">👍 ${c.likes||0}</button></div>
+    </div>`).join('')}`;
 }
 
-setInterval(() => {
-  if (state.route === 'home') loadHome();
-  else if (state.route === 'question' && state.qId) loadQuestion(state.qId);
-}, 15000);
+function viewAddCase(){
+  return`<div class="form-wrap">
+    <h1>Add PM Case Study</h1>
+    <p class="sub">Share a real problem you solved. Earn 10 points. Help the community.</p>
+    <div class="card">
+      ${state.formErr?`<div class="err" style="margin-bottom:12px">${esc(state.formErr)}</div>`:''}
+      <form onsubmit="submitCase(event)">
+        <label>Title</label>
+        <input type="text" name="title" placeholder="e.g. Reduced churn by 23% in B2B SaaS">
+        <label>Industry</label>
+        <input type="text" name="industry" placeholder="e.g. Fintech, Edtech, SaaS, E-commerce">
+        <label>Problem</label>
+        <textarea name="problem" placeholder="What was the challenge you faced?" style="min-height:80px"></textarea>
+        <label>Framework used</label>
+        <input type="text" name="framework" placeholder="e.g. RICE, Jobs-to-be-done, Cohort analysis">
+        <label>Key metric</label>
+        <input type="text" name="metric" placeholder="e.g. Churn rate, DAU, NPS">
+        <label>Decision made</label>
+        <textarea name="decision" placeholder="What did you decide to do?" style="min-height:80px"></textarea>
+        <label>Outcome</label>
+        <textarea name="outcome" placeholder="What was the measurable result?" style="min-height:80px"></textarea>
+        <label>Tags (comma separated)</label>
+        <input type="text" name="tags" placeholder="e.g. retention, onboarding, B2B">
+        <div class="formfoot">
+          <button type="button" class="btn btn-ghost" onclick="navigate('cases')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Submit (+10 pts)</button>
+        </div>
+      </form>
+    </div>
+  </div>`;
+}
 
-window.addEventListener('hashchange', onHashChange);
+function viewAuthModal(){
+  if(!state.authModal) return '';
+  return`<div class="overlay" onclick="if(event.target===this)closeAuth()">
+    <div class="modal">
+      <h3>${state.authMsg==='returning'?'Welcome back 👋':'Sign in to Leaducate'}</h3>
+      <p>${state.authMsg==='new'?'New account created automatically.':'No password needed yet — early build. Just enter your name.'}</p>
+      ${state.authErr?`<div class="err" style="margin-bottom:10px">${esc(state.authErr)}</div>`:''}
+      <form onsubmit="submitAuth(event)">
+        <input type="text" name="name" placeholder="Your name" autofocus ${state.authSubmitting?'disabled':''}>
+        <div class="formfoot">
+          <button type="button" class="btn btn-ghost" onclick="closeAuth()" ${state.authSubmitting?'disabled':''}>Cancel</button>
+          <button type="submit" class="btn btn-primary" ${state.authSubmitting?'disabled':''}>${state.authSubmitting?'Signing in…':'Continue'}</button>
+        </div>
+      </form>
+    </div>
+  </div>`;
+}
+
+function render(){
+  let page='';
+  if(state.route==='home') page=viewHome();
+  else if(state.route==='ask') page=viewAsk();
+  else if(state.route==='question') page=viewQuestion();
+  else if(state.route==='profile') page=viewProfile();
+  else if(state.route==='leaderboard') page=viewLeaderboard();
+  else if(state.route==='cases') page=viewCases();
+  else if(state.route==='add-case') page=viewAddCase();
+  document.getElementById('root').innerHTML=`${viewTopbar()}<main>${page}</main>${viewAuthModal()}`;
+}
+
+setInterval(()=>{if(state.route==='home')loadHome();else if(state.route==='question'&&state.qId)loadQuestion(state.qId);},15000);
+window.addEventListener('hashchange',onHashChange);
 primeStats();
 onHashChange();
 </script>

@@ -338,7 +338,7 @@ app.post('/api/questions/:id/answers/:answerId/best', async (req, res) => {
 });
 
 // ---------- delete answer ----------
-app.post('/api/questions/:id/answers/:answerId/delete', async (req, res) => {
+app.delete('/api/questions/:id/answers/:answerId', async (req, res) => {
   try {
     const { author = '' } = req.body;
     if (!author) return fail(res, 401, 'Sign in before deleting.');
