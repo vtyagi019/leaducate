@@ -337,6 +337,58 @@ app.post('/api/questions/:id/answers/:answerId/best', async (req, res) => {
   }
 });
 
+// ---------- delete answer ----------
+app.post('/api/questions/:id/answers/:answerId/delete', async (req, res) => {
+  try {
+    const { author = '' } = req.body;
+    if (!author) return fail(res, 401, 'Sign in before deleting.');
+
+    const q = await db.collection('questions').findOne({ id: Number(req.params.id) });
+    if (!q || q.hidden) return fail(res, 404, "This doubt doesn't exist (anymore).");
+
+    const ans = q.answers.find(a => a.id === Number(req.params.answerId));
+    if (!ans) return fail(res, 404, 'That answer no longer exists.');
+    
+    // Only answer author can delete their own answer
+    if (ans.author !== author) return fail(res, 403, 'You can only delete your own answers.');
+
+    // Remove the answer from the array
+    const updatedAnswers = q.answers.filter(a => a.id !== Number(req.params.answerId));
+
+    // If this was the best answer, reopen the question
+    const updates = {
+      answers: updatedAnswers
+    };
+
+    if (ans.isBest) {
+      updates.status = 'open';
+      updates.solvedAt = null;
+      // Deduct points from author for removing best answer
+      await db.collection('users').updateOne(
+        { name: ans.author },
+        { $inc: { points: -20 } }
+      );
+    }
+
+    await db.collection('questions').updateOne(
+      { id: Number(req.params.id) },
+      { $set: updates }
+    );
+
+    // Deduct answered count and 5 points for removing answer
+    await db.collection('users').updateOne(
+      { name: ans.author },
+      { $inc: { answered: -1, points: -5 } }
+    );
+
+    const updatedQ = await db.collection('questions').findOne({ id: Number(req.params.id) });
+    res.json({ question: publicQuestion(updatedQ) });
+  } catch (error) {
+    console.error('Delete answer error:', error);
+    fail(res, 500, 'Server error');
+  }
+});
+
 // ---------- reporting / moderation ----------
 // Stand-in for AI moderation: enough reports auto-hides the content.
 // Replace the body of this handler with a call to a real moderation
