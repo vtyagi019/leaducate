@@ -3,10 +3,22 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
-const store = require('./lib/store');
+require('dotenv').config();
+const connectDB = require('./database');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+let db; // MongoDB connection
+
+// Initialize DB connection
+connectDB().then(database => {
+  db = database;
+  console.log('Database initialized');
+}).catch(err => {
+  console.error('Failed to connect to database:', err);
+  process.exit(1);
+});
 
 // ---------- media uploads ----------
 // Files are saved to disk under /uploads and served statically.
@@ -81,13 +93,21 @@ function publicQuestion(q) {
 }
 
 // ---------- auth (placeholder — no passwords yet) ----------
-app.post('/api/users/login', (req, res) => {
-  const name = (req.body.name || '').trim();
-  if (name.length < 2) return fail(res, 400, 'Enter a name with at least 2 characters.');
-  const db = store.load();
-  const u = ensureUser(db, name);
-  store.save(db);
-  res.json({ user: publicUser(name, u) });
+app.post('/api/users/login', async (req, res) => {
+  try {
+    const name = (req.body.name || '').trim();
+    if (name.length < 2) return fail(res, 400, 'Enter a name with at least 2 characters.');
+    
+    let user = await db.collection('users').findOne({ name });
+    if (!user) {
+      user = { name, points: 0, asked: 0, answered: 0, skills: [] };
+      await db.collection('users').insertOne(user);
+    }
+    res.json({ user: publicUser(name, user) });
+  } catch (error) {
+    console.error('Login error:', error);
+    fail(res, 500, 'Server error');
+  }
 });
 
 // ---------- media upload ----------
@@ -101,34 +121,40 @@ app.post('/api/uploads', (req, res) => {
 });
 
 // ---------- questions / feed ----------
-app.get('/api/questions', (req, res) => {
-  const db = store.load();
-  const { subject, sort } = req.query;
+app.get('/api/questions', async (req, res) => {
+  try {
+    const { subject, sort } = req.query;
 
-  let list = db.questions.filter(q => !q.hidden);
-  const openCountTotal = list.filter(q => q.status === 'open').length;
+    let query = { hidden: false };
+    if (subject && subject !== 'All') {
+      query.subject = subject;
+    }
 
-  const solved = list.filter(q => q.status === 'solved' && q.solvedAt);
-  const avgSolveMinutes = solved.length
-    ? Math.round(solved.reduce((sum, q) => sum + (q.solvedAt - q.createdAt) / 60000, 0) / solved.length)
-    : 0;
+    let questions = await db.collection('questions').find(query).toArray();
+    
+    const openCountTotal = questions.filter(q => q.status === 'open').length;
 
-  if (subject && subject !== 'All') {
-    list = list.filter(q => q.subject === subject);
+    const solved = questions.filter(q => q.status === 'solved' && q.solvedAt);
+    const avgSolveMinutes = solved.length
+      ? Math.round(solved.reduce((sum, q) => sum + (q.solvedAt - q.createdAt) / 60000, 0) / solved.length)
+      : 0;
+
+    questions = questions.sort((a, b) => {
+      if (sort === 'new') return b.createdAt - a.createdAt;
+      // default: most urgent first — open doubts (oldest first), solved ones pushed last
+      if (a.status !== b.status) return a.status === 'open' ? -1 : 1;
+      return a.createdAt - b.createdAt;
+    });
+
+    res.json({
+      questions: questions.map(publicQuestion),
+      openCountTotal,
+      avgSolveMinutes
+    });
+  } catch (error) {
+    console.error('Get questions error:', error);
+    fail(res, 500, 'Server error');
   }
-
-  list = [...list].sort((a, b) => {
-    if (sort === 'new') return b.createdAt - a.createdAt;
-    // default: most urgent first — open doubts (oldest first), solved ones pushed last
-    if (a.status !== b.status) return a.status === 'open' ? -1 : 1;
-    return a.createdAt - b.createdAt;
-  });
-
-  res.json({
-    questions: list.map(publicQuestion),
-    openCountTotal,
-    avgSolveMinutes
-  });
 });
 
 // ---------- "similar questions" suggestions ----------
@@ -140,152 +166,272 @@ const STOPWORDS = new Set(['the','a','an','is','are','to','of','and','for','in',
 function tokenize(s) {
   return (s.toLowerCase().match(/[a-z0-9]+/g) || []).filter(w => w.length > 2 && !STOPWORDS.has(w));
 }
-app.get('/api/questions/search', (req, res) => {
-  const q = (req.query.q || '').trim();
-  if (q.length < 6) return res.json({ matches: [] });
-  const db = store.load();
-  const queryWords = new Set(tokenize(q));
-  if (queryWords.size === 0) return res.json({ matches: [] });
+app.get('/api/questions/search', async (req, res) => {
+  try {
+    const q = (req.query.q || '').trim();
+    if (q.length < 6) return res.json({ matches: [] });
+    
+    const questions = await db.collection('questions').find({ hidden: false }).toArray();
+    const queryWords = new Set(tokenize(q));
+    if (queryWords.size === 0) return res.json({ matches: [] });
 
-  const scored = db.questions
-    .filter(item => !item.hidden)
-    .map(item => {
-      const words = tokenize(item.title + ' ' + item.body);
-      const overlap = words.filter(w => queryWords.has(w)).length;
-      const score = overlap / Math.sqrt(queryWords.size * Math.max(words.length, 1));
-      return { item, score };
-    })
-    .filter(s => s.score > 0.12)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 4)
-    .map(s => ({ id: s.item.id, title: s.item.title, subject: s.item.subject, status: s.item.status, answerCount: s.item.answers.filter(a => !a.hidden).length }));
+    const scored = questions
+      .map(item => {
+        const words = tokenize(item.title + ' ' + item.body);
+        const overlap = words.filter(w => queryWords.has(w)).length;
+        const score = overlap / Math.sqrt(queryWords.size * Math.max(words.length, 1));
+        return { item, score };
+      })
+      .filter(s => s.score > 0.12)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 4)
+      .map(s => ({ id: s.item.id, title: s.item.title, subject: s.item.subject, status: s.item.status, answerCount: s.item.answers.filter(a => !a.hidden).length }));
 
-  res.json({ matches: scored });
+    res.json({ matches: scored });
+  } catch (error) {
+    console.error('Search error:', error);
+    fail(res, 500, 'Server error');
+  }
 });
 
-app.post('/api/questions', (req, res) => {
-  const { title = '', body = '', subject = 'Other', author = '', media = null } = req.body;
-  if (!author) return fail(res, 401, 'Sign in before posting a doubt.');
-  if (title.trim().length < 8) return fail(res, 400, 'Title needs at least 8 characters.');
-  if (body.trim().length < 10) return fail(res, 400, 'Add a bit more detail in the description.');
+app.post('/api/questions', async (req, res) => {
+  try {
+    const { title = '', body = '', subject = 'Other', author = '', media = null } = req.body;
+    if (!author) return fail(res, 401, 'Sign in before posting a doubt.');
+    if (title.trim().length < 8) return fail(res, 400, 'Title needs at least 8 characters.');
+    if (body.trim().length < 10) return fail(res, 400, 'Add a bit more detail in the description.');
 
-  const db = store.load();
-  ensureUser(db, author);
-  const q = {
-    id: db.nextQId++,
-    title: title.trim(),
-    body: body.trim(),
-    subject,
-    author,
-    createdAt: Date.now(),
-    status: 'open',
-    solvedAt: null,
-    media: media && media.url ? { url: media.url, type: media.type } : null,
-    flags: 0,
-    hidden: false,
-    answers: []
-  };
-  db.questions.unshift(q);
-  db.users[author].asked++;
-  store.save(db);
-  res.status(201).json({ question: q });
+    // Get next question ID
+    const meta = await db.collection('meta').findOne({});
+    const nextQId = meta ? meta.nextQId : 1;
+
+    // Ensure user exists
+    const user = await db.collection('users').findOne({ name: author });
+    if (!user) {
+      await db.collection('users').insertOne({ name: author, points: 0, asked: 0, answered: 0, skills: [] });
+    }
+
+    const q = {
+      id: nextQId,
+      title: title.trim(),
+      body: body.trim(),
+      subject,
+      author,
+      createdAt: Date.now(),
+      status: 'open',
+      solvedAt: null,
+      media: media && media.url ? { url: media.url, type: media.type } : null,
+      flags: 0,
+      hidden: false,
+      answers: []
+    };
+
+    await db.collection('questions').insertOne(q);
+    await db.collection('users').updateOne({ name: author }, { $inc: { asked: 1 } });
+    await db.collection('meta').updateOne({}, { $set: { nextQId: nextQId + 1 } }, { upsert: true });
+
+    res.status(201).json({ question: q });
+  } catch (error) {
+    console.error('Create question error:', error);
+    fail(res, 500, 'Server error');
+  }
 });
 
-app.get('/api/questions/:id', (req, res) => {
-  const db = store.load();
-  const q = db.questions.find(q => q.id === Number(req.params.id));
-  if (!q || q.hidden) return fail(res, 404, "This doubt doesn't exist (anymore).");
-  res.json({ question: publicQuestion(q) });
+app.get('/api/questions/:id', async (req, res) => {
+  try {
+    const q = await db.collection('questions').findOne({ id: Number(req.params.id) });
+    if (!q || q.hidden) return fail(res, 404, "This doubt doesn't exist (anymore).");
+    res.json({ question: publicQuestion(q) });
+  } catch (error) {
+    console.error('Get question error:', error);
+    fail(res, 500, 'Server error');
+  }
 });
 
-app.post('/api/questions/:id/answers', (req, res) => {
-  const { author = '', text = '', media = null } = req.body;
-  if (!author) return fail(res, 401, 'Sign in before answering.');
-  if (!text.trim() && !(media && media.url)) return fail(res, 400, 'Write something (or attach media) before submitting.');
+app.post('/api/questions/:id/answers', async (req, res) => {
+  try {
+    const { author = '', text = '', media = null } = req.body;
+    if (!author) return fail(res, 401, 'Sign in before answering.');
+    if (!text.trim() && !(media && media.url)) return fail(res, 400, 'Write something (or attach media) before submitting.');
 
-  const db = store.load();
-  const q = db.questions.find(q => q.id === Number(req.params.id));
-  if (!q || q.hidden) return fail(res, 404, "This doubt doesn't exist (anymore).");
-  if (q.status === 'solved') return fail(res, 400, 'This doubt is already solved.');
+    const q = await db.collection('questions').findOne({ id: Number(req.params.id) });
+    if (!q || q.hidden) return fail(res, 404, "This doubt doesn't exist (anymore).");
+    if (q.status === 'solved') return fail(res, 400, 'This doubt is already solved.');
 
-  ensureUser(db, author);
-  const ans = {
-    id: db.nextAId++,
-    author,
-    text: text.trim(),
-    media: media && media.url ? { url: media.url, type: media.type } : null,
-    isBest: false,
-    flags: 0,
-    hidden: false
-  };
-  q.answers.push(ans);
-  db.users[author].answered++;
-  db.users[author].points += 5;
-  store.save(db);
-  res.status(201).json({ question: publicQuestion(q) });
+    // Get next answer ID
+    const meta = await db.collection('meta').findOne({});
+    const nextAId = meta ? meta.nextAId : 100;
+
+    // Ensure user exists
+    const user = await db.collection('users').findOne({ name: author });
+    if (!user) {
+      await db.collection('users').insertOne({ name: author, points: 0, asked: 0, answered: 0, skills: [] });
+    }
+
+    const ans = {
+      id: nextAId,
+      author,
+      text: text.trim(),
+      media: media && media.url ? { url: media.url, type: media.type } : null,
+      isBest: false,
+      flags: 0,
+      hidden: false
+    };
+
+    await db.collection('questions').updateOne(
+      { id: Number(req.params.id) },
+      { $push: { answers: ans } }
+    );
+    await db.collection('users').updateOne(
+      { name: author },
+      { $inc: { answered: 1, points: 5 } }
+    );
+    await db.collection('meta').updateOne({}, { $set: { nextAId: nextAId + 1 } }, { upsert: true });
+
+    const updatedQ = await db.collection('questions').findOne({ id: Number(req.params.id) });
+    res.status(201).json({ question: publicQuestion(updatedQ) });
+  } catch (error) {
+    console.error('Create answer error:', error);
+    fail(res, 500, 'Server error');
+  }
 });
 
-app.post('/api/questions/:id/answers/:answerId/best', (req, res) => {
-  const { author = '' } = req.body;
-  const db = store.load();
-  const q = db.questions.find(q => q.id === Number(req.params.id));
-  if (!q || q.hidden) return fail(res, 404, "This doubt doesn't exist (anymore).");
-  if (q.author !== author) return fail(res, 403, 'Only the person who asked can mark a best answer.');
+app.post('/api/questions/:id/answers/:answerId/best', async (req, res) => {
+  try {
+    const { author = '' } = req.body;
+    const q = await db.collection('questions').findOne({ id: Number(req.params.id) });
+    if (!q || q.hidden) return fail(res, 404, "This doubt doesn't exist (anymore).");
+    if (q.author !== author) return fail(res, 403, 'Only the person who asked can mark a best answer.');
 
-  const ans = q.answers.find(a => a.id === Number(req.params.answerId));
-  if (!ans) return fail(res, 404, 'That answer no longer exists.');
+    const ans = q.answers.find(a => a.id === Number(req.params.answerId));
+    if (!ans) return fail(res, 404, 'That answer no longer exists.');
 
-  q.answers.forEach(a => { a.isBest = a.id === ans.id; });
-  q.status = 'solved';
-  q.solvedAt = Date.now();
-  ensureUser(db, ans.author).points += 20;
-  store.save(db);
-  res.json({ question: publicQuestion(q) });
+    // Update all answers to set isBest only on the selected one
+    const updatedAnswers = q.answers.map(a => ({
+      ...a,
+      isBest: a.id === ans.id
+    }));
+
+    await db.collection('questions').updateOne(
+      { id: Number(req.params.id) },
+      {
+        $set: {
+          answers: updatedAnswers,
+          status: 'solved',
+          solvedAt: Date.now()
+        }
+      }
+    );
+
+    // Add points to answer author
+    await db.collection('users').updateOne(
+      { name: ans.author },
+      { $inc: { points: 20 } }
+    );
+
+    const updatedQ = await db.collection('questions').findOne({ id: Number(req.params.id) });
+    res.json({ question: publicQuestion(updatedQ) });
+  } catch (error) {
+    console.error('Mark best answer error:', error);
+    fail(res, 500, 'Server error');
+  }
 });
 
 // ---------- reporting / moderation ----------
 // Stand-in for AI moderation: enough reports auto-hides the content.
 // Replace the body of this handler with a call to a real moderation
 // API if/when you have one — everything else stays the same.
-app.post('/api/questions/:id/report', (req, res) => {
-  const { answerId } = req.body || {};
-  const db = store.load();
-  const q = db.questions.find(q => q.id === Number(req.params.id));
-  if (!q) return fail(res, 404, "This doubt doesn't exist (anymore).");
+app.post('/api/questions/:id/report', async (req, res) => {
+  try {
+    const { answerId } = req.body || {};
+    const q = await db.collection('questions').findOne({ id: Number(req.params.id) });
+    if (!q) return fail(res, 404, "This doubt doesn't exist (anymore).");
 
-  const target = answerId ? q.answers.find(a => a.id === Number(answerId)) : q;
-  if (!target) return fail(res, 404, 'Nothing to report there.');
+    let target = answerId 
+      ? q.answers.find(a => a.id === Number(answerId))
+      : q;
+    
+    if (!target) return fail(res, 404, 'Nothing to report there.');
 
-  target.flags = (target.flags || 0) + 1;
-  if (target.flags >= AUTO_HIDE_AFTER_FLAGS) target.hidden = true;
-  store.save(db);
-  res.json({ flags: target.flags, hidden: !!target.hidden });
+    const newFlags = (target.flags || 0) + 1;
+    const willHide = newFlags >= AUTO_HIDE_AFTER_FLAGS;
+
+    if (answerId) {
+      // Update specific answer
+      const updatedAnswers = q.answers.map(a =>
+        a.id === Number(answerId)
+          ? { ...a, flags: newFlags, hidden: willHide }
+          : a
+      );
+      await db.collection('questions').updateOne(
+        { id: Number(req.params.id) },
+        { $set: { answers: updatedAnswers } }
+      );
+    } else {
+      // Update question
+      await db.collection('questions').updateOne(
+        { id: Number(req.params.id) },
+        {
+          $set: {
+            flags: newFlags,
+            hidden: willHide
+          }
+        }
+      );
+    }
+
+    res.json({ flags: newFlags, hidden: willHide });
+  } catch (error) {
+    console.error('Report error:', error);
+    fail(res, 500, 'Server error');
+  }
 });
 
 // ---------- profile ----------
-app.get('/api/users/:name', (req, res) => {
-  const name = req.params.name;
-  const db = store.load();
-  const u = ensureUser(db, name);
-  store.save(db);
+app.get('/api/users/:name', async (req, res) => {
+  try {
+    const name = req.params.name;
+    let user = await db.collection('users').findOne({ name });
+    if (!user) {
+      user = { name, points: 0, asked: 0, answered: 0, skills: [] };
+      await db.collection('users').insertOne(user);
+    }
 
-  const asked = db.questions.filter(q => q.author === name && !q.hidden).map(q => ({ id: q.id, title: q.title, subject: q.subject, status: q.status, createdAt: q.createdAt }));
-  const answered = db.questions.filter(q => !q.hidden && q.answers.some(a => a.author === name && !a.hidden)).map(q => ({ id: q.id, title: q.title }));
+    const asked = await db.collection('questions')
+      .find({ author: name, hidden: false })
+      .project({ id: 1, title: 1, subject: 1, status: 1, createdAt: 1 })
+      .toArray();
 
-  res.json({ profile: { ...publicUser(name, u), asked, answered } });
+    const answeredQuestions = await db.collection('questions')
+      .find({ hidden: false, 'answers.author': name, 'answers.hidden': false })
+      .project({ id: 1, title: 1 })
+      .toArray();
+
+    res.json({ profile: { ...publicUser(name, user), asked, answered: answeredQuestions } });
+  } catch (error) {
+    console.error('Get profile error:', error);
+    fail(res, 500, 'Server error');
+  }
 });
 
 // ---------- leaderboard ----------
-app.get('/api/leaderboard', (req, res) => {
-  const db = store.load();
-  const rows = Object.entries(db.users)
-    .map(([name, u]) => publicUser(name, u))
-    .sort((a, b) => b.points - a.points);
-  res.json({ leaderboard: rows });
+app.get('/api/leaderboard', async (req, res) => {
+  try {
+    const users = await db.collection('users')
+      .find({})
+      .sort({ points: -1 })
+      .toArray();
+    
+    const leaderboard = users.map(u => publicUser(u.name, u));
+    res.json({ leaderboard });
+  } catch (error) {
+    console.error('Get leaderboard error:', error);
+    fail(res, 500, 'Server error');
+  }
 });
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 
-app.listen(PORT, '127.0.0.1', () => {
-  console.log(`Leaducate backend running at http://127.0.0.1:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Leaducate backend running on port ${PORT}`);
 });
