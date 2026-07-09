@@ -516,11 +516,24 @@ const DEFAULT_CASE_STUDIES = [
 
 function publicCaseStudy(cs) {
   return {
-    ...cs,
+    id: cs.id,
+    title: cs.title,
+    author: cs.author,
+    industry: cs.industry,
+    problem: cs.problem,
+    framework: cs.framework,
+    metric: cs.metric,
+    decision: cs.decision,
+    outcome: cs.outcome,
+    image: cs.image || null,
+    createdAt: cs.createdAt,
+    likes: cs.likes || 0,
     tags: cs.tags || [],
-    likes: cs.likes || 0
+    thoughtsCount: cs.thoughtsCount || 0,
+    thoughts: cs.thoughts || []
   };
 }
+
 
 async function ensureCaseStudiesSeed() {
   try {
@@ -573,22 +586,24 @@ app.post('/api/case-studies', async (req, res) => {
     const nextIdDoc = await db.collection('meta').findOne({ key: 'caseStudiesNextId' });
     const nextId = nextIdDoc?.value || (DEFAULT_CASE_STUDIES.length + 1);
 
-    const doc = {
-      id: nextId,
-      title: String(title).trim(),
-      author,
-      industry: String(industry).trim(),
-      problem: String(problem).trim(),
-      framework: String(framework).trim(),
-      metric: String(metric).trim(),
-      decision: String(decision).trim(),
-      outcome: String(outcome).trim(),
-      tags: Array.isArray(tags)
-        ? tags.map(t => String(t).trim()).filter(Boolean)
-        : [],
-      createdAt: Date.now(),
-      likes: 0
-    };
+      const doc = {
+        id: nextId,
+        title: String(title).trim(),
+        author,
+        industry: String(industry).trim(),
+        problem: String(problem).trim(),
+        framework: String(framework).trim(),
+        metric: String(metric).trim(),
+        decision: String(decision).trim(),
+        outcome: String(outcome).trim(),
+        tags: Array.isArray(tags)
+          ? tags.map(t => String(t).trim()).filter(Boolean)
+          : [],
+        image: req.body.image && req.body.image.url ? { url: req.body.image.url } : null,
+        createdAt: Date.now(),
+        likes: 0
+      };
+
 
     await db.collection('caseStudies').insertOne(doc);
     await db.collection('meta').updateOne(
@@ -619,14 +634,116 @@ app.post('/api/case-studies/:id/like', async (req, res) => {
     const updated = await db.collection('caseStudies').findOne({ id });
     if (!updated) return fail(res, 404, 'Case study not found');
 
-    res.json({ caseStudy: publicCaseStudy(updated) });
+    // attach thoughts count (optional)
+    const thoughtsCount = await db.collection('caseStudyThoughts').countDocuments({ caseStudyId: id });
+    res.json({ caseStudy: publicCaseStudy({
+      ...updated,
+      thoughtsCount,
+      thoughts: []
+    }) });
   } catch (error) {
     console.error('Like case study error:', error);
     fail(res, 500, 'Server error');
   }
 });
 
+app.post('/api/case-studies/:id/thoughts', async (req, res) => {
+  try {
+    const { author = '', text = '', image = null } = req.body || {};
+    const caseStudyId = Number(req.params.id);
+    if (!author) return fail(res, 401, 'Sign in before sharing thoughts.');
+    if (!caseStudyId) return fail(res, 400, 'Invalid case study id');
+    if (!String(text || '').trim()) return fail(res, 400, 'Write your thoughts before posting.');
+
+    const cs = await db.collection('caseStudies').findOne({ id: caseStudyId });
+    if (!cs) return fail(res, 404, 'Case study not found');
+
+    const doc = {
+      caseStudyId,
+      author,
+      text: String(text).trim(),
+      image: image && image.url ? { url: image.url } : null,
+      createdAt: Date.now()
+    };
+
+    await db.collection('caseStudyThoughts').insertOne(doc);
+
+    const thoughts = await db.collection('caseStudyThoughts')
+      .find({ caseStudyId })
+      .sort({ createdAt: -1 })
+      .limit(20)
+      .toArray();
+
+    const mapped = thoughts.map(t => ({
+      author: t.author,
+      text: t.text,
+      image: t.image ? t.image.url : null,
+      createdAt: t.createdAt
+    }));
+
+    const thoughtsCount = await db.collection('caseStudyThoughts').countDocuments({ caseStudyId });
+
+    await db.collection('caseStudies').updateOne(
+      { id: caseStudyId },
+      { $set: { thoughtsCount } }
+    );
+
+    res.status(201).json({
+      thoughts: mapped,
+      thoughtsCount
+    });
+  } catch (error) {
+    console.error('Share thoughts error:', error);
+    fail(res, 500, 'Server error');
+  }
+});
+
+app.get('/api/case-studies', async (req, res) => {
+  try {
+    await ensureCaseStudiesSeed();
+    const docs = await db.collection('caseStudies').find({})
+      .sort({ createdAt: -1 })
+      .toArray();
+
+    const ids = docs.map(d => d.id);
+    const thoughtsByCs = {};
+
+    if (ids.length) {
+      const thoughts = await db.collection('caseStudyThoughts')
+        .find({ caseStudyId: { $in: ids } })
+        .sort({ createdAt: -1 })
+        .limit(200)
+        .toArray();
+
+      for (const t of thoughts) {
+        if (!thoughtsByCs[t.caseStudyId]) thoughtsByCs[t.caseStudyId] = [];
+        thoughtsByCs[t.caseStudyId].push({
+          author: t.author,
+          text: t.text,
+          image: t.image ? t.image.url : null,
+          createdAt: t.createdAt
+        });
+      }
+    }
+
+    const caseStudies = await Promise.all(docs.map(async d => {
+      const thoughtsCount = await db.collection('caseStudyThoughts').countDocuments({ caseStudyId: d.id });
+      return publicCaseStudy({
+        ...d,
+        thoughtsCount,
+        thoughts: thoughtsByCs[d.id] || []
+      });
+    }));
+
+    res.json({ caseStudies });
+  } catch (error) {
+    console.error('Get case studies error:', error);
+    fail(res, 500, 'Server error');
+  }
+});
+
 app.get('/api/health', (req, res) => res.json({ ok: true }));
+
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Leaducate backend running on port ${PORT}`);

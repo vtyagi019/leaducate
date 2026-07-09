@@ -386,11 +386,55 @@ async function submitCase(e){
   const f=e.target;
   const doPost=async()=>{
     const tags=f.elements.tags.value.split(',').map(t=>t.trim()).filter(Boolean);
-    try{await api('/case-studies',{method:'POST',body:{author:state.currentUser,title:f.elements.title.value.trim(),industry:f.elements.industry.value.trim(),problem:f.elements.problem.value.trim(),framework:f.elements.framework.value.trim(),metric:f.elements.metric.value.trim(),decision:f.elements.decision.value.trim(),outcome:f.elements.outcome.value.trim(),tags}});navigate('cases');}
+    try{
+      let image=null;
+      if(state.caseImg){
+        image=await uploadMedia({
+          file: state.caseImg.file,
+          filename: state.caseImg.filename
+        });
+      }
+
+      await api('/case-studies',{method:'POST',body:{
+        author:state.currentUser,
+        title:f.elements.title.value.trim(),
+        industry:f.elements.industry.value.trim(),
+        problem:f.elements.problem.value.trim(),
+        framework:f.elements.framework.value.trim(),
+        metric:f.elements.metric.value.trim(),
+        decision:f.elements.decision.value.trim(),
+        outcome:f.elements.outcome.value.trim(),
+        tags,
+        image
+      }});
+
+      state.caseImg=null;
+      render();
+      navigate('cases');
+    }
     catch(err){state.formErr=err.message;render();}
   };
   if(!requireAuth(doPost))return;await doPost();
 }
+
+async function postCaseThought(e,caseId){
+  e.preventDefault();
+  const form=e.target;
+  const text=form.elements.thought.value.trim();
+  if(!text) return;
+
+  const doPost=async()=>{
+    try{
+      await api('/case-studies/'+caseId+'/thoughts',{method:'POST',body:{author:state.currentUser,text}});
+      await loadCases();
+      form.reset();
+    }catch(err){state.formErr=err.message;render();}
+  };
+
+  if(!requireAuth(doPost)) return;
+  await doPost();
+}
+
 async function likeCase(id){if(!requireAuth(()=>{}))return;try{await api('/case-studies/'+id+'/like',{method:'POST',body:{author:state.currentUser}});await loadCases();}catch(e){}}
 
 function setFilter(s){state.filter=s;loadHome();}
@@ -599,14 +643,46 @@ function viewCases(){
     <div class="cs-card">
       <div class="cs-title">${esc(c.title)}</div>
       <div class="cs-meta">${esc(c.author)} · ${esc(c.industry)} · ${new Date(c.createdAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</div>
+      ${c.image?`<div class="qmedia"><img src="${c.image}" alt="case study attachment" style="max-width:100%;border-radius:8px;display:block;margin:10px 0;"></div>`:''}
       <div class="cs-field"><span class="fl">Problem</span><div class="fv">${esc(c.problem)}</div></div>
       ${c.framework?`<div class="cs-field"><span class="fl">Framework</span><div class="fv">${esc(c.framework)}</div></div>`:''}
       ${c.decision?`<div class="cs-field"><span class="fl">Decision</span><div class="fv">${esc(c.decision)}</div></div>`:''}
       <div class="cs-field"><span class="fl">Outcome</span><div class="fv">${esc(c.outcome)}</div></div>
       ${c.tags&&c.tags.length?`<div class="cs-tags">${c.tags.map(t=>`<span class="cs-tag">${esc(t)}</span>`).join('')}</div>`:''}
-      <div style="margin-top:12px"><button class="btn btn-ghost btn-sm" onclick="likeCase(${c.id})">👍 ${c.likes||0}</button></div>
+
+      <div style="margin-top:12px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center">
+        <button class="btn btn-ghost btn-sm" onclick="likeCase(${c.id})">👍 ${c.likes||0}</button>
+        <span style="color:var(--muted);font-size:12px">💬 ${c.thoughtsCount||0} thoughts</span>
+      </div>
+
+      <div class="ansform-wrap" style="margin-top:14px">
+        <form onsubmit="postCaseThought(event,${c.id})">
+          <label>Share your thoughts</label>
+          <textarea name="thought" placeholder="Add your feedback / lesson learnt..." style="min-height:64px"></textarea>
+          <div class="formfoot" style="justify-content:space-between">
+            <button type="button" class="btn btn-ghost" onclick="document.getElementById('root').scrollIntoView()">Cancel</button>
+            <button type="submit" class="btn btn-primary">Post</button>
+          </div>
+        </form>
+      </div>
+
+      ${renderCaseThoughts(c.thoughts||[])}
     </div>`).join('')}`;
 }
+
+function renderCaseThoughts(thoughts){
+  if(!thoughts||!thoughts.length) return `<div style="margin-top:12px;color:var(--muted);font-size:13px">No thoughts yet. Be the first!</div>`;
+  return `<div style="margin-top:12px">
+    ${thoughts.map(t=>`
+      <div class="cs-field" style="margin-bottom:10px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:rgba(26,26,53,.6)">
+        <div class="cs-meta" style="margin-bottom:6px">${esc(t.author)} · ${new Date(t.createdAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</div>
+        ${t.image?`<div class="qmedia"><img src="${t.image}" alt="thought attachment" style="max-width:100%;border-radius:8px;display:block;margin:8px 0;"></div>`:''}
+        <div class="fv" style="font-size:13px;white-space:pre-wrap">${esc(t.text)}</div>
+      </div>
+    `).join('')}
+  </div>`;
+}
+
 
 function viewAddCase(){
   return`<div class="form-wrap">
@@ -619,6 +695,11 @@ function viewAddCase(){
         <input type="text" name="title" placeholder="e.g. Reduced churn by 23% in B2B SaaS">
         <label>Industry</label>
         <input type="text" name="industry" placeholder="e.g. Fintech, Edtech, SaaS, E-commerce">
+
+        <label>Attach an image (optional)</label>
+        <input type="file" id="case-image" accept="image/*" style="display:block" onchange="pickCaseImage(event)">
+        <div id="case-image-prev"></div>
+
         <label>Problem</label>
         <textarea name="problem" placeholder="What was the challenge you faced?" style="min-height:80px"></textarea>
         <label>Framework used</label>
@@ -639,6 +720,24 @@ function viewAddCase(){
     </div>
   </div>`;
 }
+
+function pickCaseImage(e){
+  const f=e.target.files[0];
+  if(!f) return;
+  state.caseImg={file:f,previewUrl:URL.createObjectURL(f),filename:f.name};
+  const el=document.getElementById('case-image-prev');
+  if(el) el.innerHTML=`<div class="media-preview"><img src="${state.caseImg.previewUrl}" alt="preview" style="max-width:180px;border-radius:8px"/><button type="button" class="rm-media" onclick="removeCaseImage()">Remove</button></div>`;
+}
+
+function removeCaseImage(){
+  state.caseImg=null;
+  const el=document.getElementById('case-image-prev');
+  if(el) el.innerHTML='';
+  const inp=document.getElementById('case-image');
+  if(inp) inp.value='';
+}
+
+
 
 function viewAuthModal(){
   if(!state.authModal) return '';
