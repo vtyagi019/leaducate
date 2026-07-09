@@ -482,8 +482,153 @@ app.get('/api/leaderboard', async (req, res) => {
   }
 });
 
+// ---------- case studies ----------
+const DEFAULT_CASE_STUDIES = [
+  {
+    id: 1,
+    title: 'Reducing churn in a B2B SaaS by 23%',
+    author: 'Aanya R.',
+    industry: 'SaaS',
+    problem: 'Monthly churn was 8%, above industry avg of 5%',
+    framework: 'Jobs-to-be-done + cohort analysis',
+    metric: 'Churn rate, NPS',
+    decision: 'Rebuilt onboarding for power-user persona',
+    outcome: 'Churn dropped to 6.2% in 90 days',
+    tags: ['retention', 'onboarding', 'B2B'],
+    createdAt: Date.now() - 120 * 60000,
+    likes: 12
+  },
+  {
+    id: 2,
+    title: 'Prioritizing a 60-item backlog for a fintech startup',
+    author: 'Rohit K.',
+    industry: 'Fintech',
+    problem: 'Engineering had 3 sprints worth of capacity, 60 items in backlog, 5 stakeholders all claiming P0',
+    framework: 'RICE scoring',
+    metric: 'Revenue impact, dev effort',
+    decision: 'Cut scope to 8 items, shipped 2 weeks early',
+    outcome: 'Feature adoption 34% higher than previous quarter',
+    tags: ['prioritization', 'fintech', 'stakeholders'],
+    createdAt: Date.now() - 200 * 60000,
+    likes: 8
+  }
+];
+
+function publicCaseStudy(cs) {
+  return {
+    ...cs,
+    tags: cs.tags || [],
+    likes: cs.likes || 0
+  };
+}
+
+async function ensureCaseStudiesSeed() {
+  try {
+    const count = await db.collection('caseStudies').countDocuments({});
+    if (count > 0) return;
+
+    await db.collection('caseStudies').insertMany(DEFAULT_CASE_STUDIES);
+    console.log('✅ Seeded default case studies');
+  } catch (e) {
+    console.error('Case study seeding failed:', e);
+  }
+}
+
+app.get('/api/case-studies', async (req, res) => {
+  try {
+    await ensureCaseStudiesSeed();
+    const docs = await db.collection('caseStudies')
+      .find({})
+      .sort({ createdAt: -1 })
+      .toArray();
+
+    res.json({ caseStudies: docs.map(publicCaseStudy) });
+  } catch (error) {
+    console.error('Get case studies error:', error);
+    fail(res, 500, 'Server error');
+  }
+});
+
+app.post('/api/case-studies', async (req, res) => {
+  try {
+    const {
+      author = '',
+      title = '',
+      industry = '',
+      problem = '',
+      framework = '',
+      metric = '',
+      decision = '',
+      outcome = '',
+      tags = []
+    } = req.body || {};
+
+    if (!author) return fail(res, 401, 'Sign in before posting a case study.');
+    if (String(title).trim().length < 6) return fail(res, 400, 'Title is too short.');
+    if (String(problem).trim().length < 10) return fail(res, 400, 'Problem is too short.');
+    if (String(outcome).trim().length < 6) return fail(res, 400, 'Outcome is too short.');
+
+    await ensureCaseStudiesSeed();
+
+    const nextIdDoc = await db.collection('meta').findOne({ key: 'caseStudiesNextId' });
+    const nextId = nextIdDoc?.value || (DEFAULT_CASE_STUDIES.length + 1);
+
+    const doc = {
+      id: nextId,
+      title: String(title).trim(),
+      author,
+      industry: String(industry).trim(),
+      problem: String(problem).trim(),
+      framework: String(framework).trim(),
+      metric: String(metric).trim(),
+      decision: String(decision).trim(),
+      outcome: String(outcome).trim(),
+      tags: Array.isArray(tags)
+        ? tags.map(t => String(t).trim()).filter(Boolean)
+        : [],
+      createdAt: Date.now(),
+      likes: 0
+    };
+
+    await db.collection('caseStudies').insertOne(doc);
+    await db.collection('meta').updateOne(
+      { key: 'caseStudiesNextId' },
+      { $set: { value: nextId + 1 } },
+      { upsert: true }
+    );
+
+    res.status(201).json({ caseStudy: publicCaseStudy(doc) });
+  } catch (error) {
+    console.error('Create case study error:', error);
+    fail(res, 500, 'Server error');
+  }
+});
+
+app.post('/api/case-studies/:id/like', async (req, res) => {
+  try {
+    const { author = '' } = req.body || {};
+    const id = Number(req.params.id);
+    if (!author) return fail(res, 401, 'Sign in before liking.');
+    if (!id) return fail(res, 400, 'Invalid case study id');
+
+    await db.collection('caseStudies').updateOne(
+      { id },
+      { $inc: { likes: 1 } }
+    );
+
+    const updated = await db.collection('caseStudies').findOne({ id });
+    if (!updated) return fail(res, 404, 'Case study not found');
+
+    res.json({ caseStudy: publicCaseStudy(updated) });
+  } catch (error) {
+    console.error('Like case study error:', error);
+    fail(res, 500, 'Server error');
+  }
+});
+
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Leaducate backend running on port ${PORT}`);
 });
+
