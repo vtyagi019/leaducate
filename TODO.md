@@ -1,14 +1,8 @@
-# TODO - Fix Case Studies
+# TODO
 
-- [x] Inspect repo for case studies usage in front-end.
-- [x] Confirm back-end lacks `/api/case-studies` routes.
-- [ ] Add case-study Mongo-backed endpoints in `server.js`:
-  - [ ] `GET /api/case-studies`
-  - [ ] `POST /api/case-studies`
-  - [ ] `POST /api/case-studies/:id/like`
-- [ ] Seed initial case studies if collection is empty.
-- [ ] (Optional) Update `migrate.js` to seed case studies from `lib/store.js`.
-- [x] Run server and verify with a quick request.
-- [ ] (Optional) Update `migrate.js` to seed case studies from `lib/store.js`.
-
+- [ ] Export feature: add one-click **Export Markdown** and **Export PDF** beside Case Studies and (if present) beside Question detail.
+  - [ ] Add UI buttons in `public/index.html`
+  - [ ] Implement Markdown download for current card (question + answers / case study)
+  - [ ] Implement PDF export using print-to-PDF (browser dialog) + print-only CSS
+  - [ ] Verify downloads and print formatting
 

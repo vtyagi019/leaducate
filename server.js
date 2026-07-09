@@ -647,7 +647,29 @@ app.post('/api/case-studies/:id/like', async (req, res) => {
   }
 });
 
+app.delete('/api/case-studies/:id', async (req, res) => {
+  try {
+    const { author = '' } = req.body || {};
+    const id = Number(req.params.id);
+    if (!author) return fail(res, 401, 'Sign in before deleting.');
+    if (!id) return fail(res, 400, 'Invalid case study id');
+
+    const cs = await db.collection('caseStudies').findOne({ id });
+    if (!cs) return fail(res, 404, 'Case study not found');
+    if (cs.author !== author) return fail(res, 403, 'You can only delete your own case studies');
+
+    await db.collection('caseStudies').deleteOne({ id });
+    await db.collection('caseStudyThoughts').deleteMany({ caseStudyId: id });
+
+    res.json({ ok: true });
+  } catch (error) {
+    console.error('Delete case study error:', error);
+    fail(res, 500, 'Server error');
+  }
+});
+
 app.post('/api/case-studies/:id/thoughts', async (req, res) => {
+
   try {
     const { author = '', text = '', image = null } = req.body || {};
     const caseStudyId = Number(req.params.id);

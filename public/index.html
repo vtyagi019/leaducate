@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Leaducate — Get your doubt solved in minutes, not hours</title>
+<title>Leaducate Get your doubt solved in minutes, not hours</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -199,6 +199,21 @@ main{max-width:900px;margin:0 auto;padding:32px 20px 100px;}
 .cs-field .fv{font-size:13px;color:#C4C4D4;}
 .cs-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
 .cs-tag{font-size:11px;background:var(--purple-dim);color:var(--purple-light);border-radius:999px;padding:3px 10px;}
+
+/* export */
+.export-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:flex-end;margin-top:10px;}
+.export-btn{font-size:12px;border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:999px;padding:6px 12px;transition:all .15s;}
+.export-btn:hover{border-color:var(--purple);color:var(--text);}
+
+@media print{
+  body{background:#fff !important;color:#000 !important;}
+  .export-btn,.btn,.chip,.topbar,.overlay,.modal,.form-wrap,.anstransform-wrap,.ans-actions,.report-btn,.del-btn,.mark-btn,.mediabar,.suggest-box{display:none !important;}
+  main{padding:0 !important;max-width:none !important;}
+  .cs-card{border:1px solid #ddd !important;}
+  /* show only selected card */
+  .cs-card{display:none !important;}
+  .cs-card.print-target{display:block !important;}
+}
 
 /* modal */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px;}
@@ -435,7 +450,92 @@ async function postCaseThought(e,caseId){
   await doPost();
 }
 
-async function likeCase(id){if(!requireAuth(()=>{}))return;try{await api('/case-studies/'+id+'/like',{method:'POST',body:{author:state.currentUser}});await loadCases();}catch(e){}}
+async function likeCase(id){if(!requireAuth(()=>{}))return;try{await api('/case-studies/'+id+'/like',{method:'POST',body:{author:state.currentUser}});await loadCases();}catch(e){} }
+
+async function deleteCase(id){
+  if(!requireAuth(()=>{})) return;
+  if(!confirm('Delete this case study? This cannot be undone.')) return;
+  try{
+    await api('/case-studies/'+id,{method:'DELETE',body:{author:state.currentUser}});
+    await loadCases();
+  }catch(e){
+    alert(e.message || 'Delete failed');
+  }
+}
+
+function downloadText(filename, text){
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function caseStudyToMarkdown(c, options = {}){
+  const thoughts = (c.thoughts || []).filter(Boolean);
+  const tags = Array.isArray(c.tags) ? c.tags : [];
+
+  const header = `# ${c.title || ''}`;
+  const meta = `\n**Author:** ${c.author || ''}\n**Industry:** ${c.industry || ''}\n**Created:** ${c.createdAt ? new Date(c.createdAt).toISOString() : ''}`;
+
+  const fields = [
+    { k: 'Problem', v: c.problem },
+    { k: 'Framework', v: c.framework },
+    { k: 'Metric', v: c.metric },
+    { k: 'Decision', v: c.decision },
+    { k: 'Outcome', v: c.outcome }
+  ].filter(x => String(x.v || '').trim().length > 0)
+   .map(x => `\n## ${x.k}\n${x.v}`);
+
+  const tagLine = tags.length ? `\n\n**Tags:** ${tags.join(', ')}` : '';
+
+  const thoughtsBlock = thoughts.length
+    ? `\n\n---\n## Thoughts\n${thoughts.map(t => `\n### ${t.author || 'Anonymous'}\n${t.createdAt ? new Date(t.createdAt).toISOString() : ''}\n\n${t.text || ''}`).join('')}`
+    : '';
+
+  const likesLine = options.includeLikes ? `\n\n**Likes:** ${c.likes || 0}` : '';
+
+  return [header, meta, likesLine, fields.join(''), tagLine, thoughtsBlock].join('');
+}
+
+async function exportCaseStudyMarkdown(id){
+  try{
+    // Ensure freshest data for thoughts
+    if(state.caseStudies && state.caseStudies.length){
+      const found = state.caseStudies.find(x => x.id === id);
+      if(found){
+        const md = caseStudyToMarkdown(found, { includeLikes: true });
+        downloadText(`case-study-${id}.md`, md);
+        return;
+      }
+    }
+    const d = await api('/case-studies');
+    const cs = (d.caseStudies || []).find(x => x.id === id);
+    if(!cs) throw new Error('Case study not found');
+    const md = caseStudyToMarkdown(cs, { includeLikes: true });
+    downloadText(`case-study-${id}.md`, md);
+  }catch(e){
+    alert(e.message || 'Export failed');
+  }
+}
+
+async function exportCaseStudyPDF(id){
+  try{
+    // Mark card as print target
+    document.querySelectorAll('.cs-card.print-target').forEach(el => el.classList.remove('print-target'));
+    const el = document.querySelector(`.cs-card[data-cs-id="${id}"]`);
+    if(el) el.classList.add('print-target');
+
+    // Trigger print dialog (user saves as PDF)
+    window.print();
+  }catch(e){
+    alert(e.message || 'PDF export failed');
+  }
+}
 
 function setFilter(s){state.filter=s;loadHome();}
 function setSort(s){state.sort=s;loadHome();}
@@ -640,7 +740,7 @@ function viewCases(){
   ${state.loadErr?`<div class="empty"><h3>${esc(state.loadErr)}</h3></div>`:''}
   ${!state.caseStudies.length?`<div class="empty"><h3>No case studies yet</h3><p>Be the first to add one — earn 10 points.</p></div>`:
   state.caseStudies.map(c=>`
-    <div class="cs-card">
+    <div class="cs-card" data-cs-id="${c.id}">
       <div class="cs-title">${esc(c.title)}</div>
       <div class="cs-meta">${esc(c.author)} · ${esc(c.industry)} · ${new Date(c.createdAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</div>
       ${c.image?`<div class="qmedia"><img src="${c.image}" alt="case study attachment" style="max-width:100%;border-radius:8px;display:block;margin:10px 0;"></div>`:''}
@@ -652,7 +752,15 @@ function viewCases(){
 
       <div style="margin-top:12px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center">
         <button class="btn btn-ghost btn-sm" onclick="likeCase(${c.id})">👍 ${c.likes||0}</button>
-        <span style="color:var(--muted);font-size:12px">💬 ${c.thoughtsCount||0} thoughts</span>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <span style="color:var(--muted);font-size:12px">💬 ${c.thoughtsCount||0} thoughts</span>
+          ${state.currentUser && state.currentUser===c.author ? `<button class="btn btn-danger btn-sm" onclick="deleteCase(${c.id})">🗑️ Delete</button>` : ''}
+        </div>
+      </div>
+
+      <div class="export-row">
+        <button class="export-btn" type="button" onclick="exportCaseStudyMarkdown(${c.id})">⬇️ Export Markdown</button>
+        <button class="export-btn" type="button" onclick="exportCaseStudyPDF(${c.id})">🖨️ Export PDF</button>
       </div>
 
       <div class="ansform-wrap" style="margin-top:14px">
@@ -669,6 +777,7 @@ function viewCases(){
       ${renderCaseThoughts(c.thoughts||[])}
     </div>`).join('')}`;
 }
+
 
 function renderCaseThoughts(thoughts){
   if(!thoughts||!thoughts.length) return `<div style="margin-top:12px;color:var(--muted);font-size:13px">No thoughts yet. Be the first!</div>`;
