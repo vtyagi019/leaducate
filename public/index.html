@@ -882,6 +882,74 @@ setInterval(()=>{if(state.route==='home')loadHome();else if(state.route==='quest
 window.addEventListener('hashchange',onHashChange);
 primeStats();
 onHashChange();
+
+// ---------------- export (case studies) ----------------
+function downloadText(filename, text){
+  const blob=new Blob([text],{type:'text/plain;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function caseStudyToMarkdown(cs){
+  const lines=[];
+  lines.push(`# ${cs.title}`);
+  lines.push('');
+  lines.push(`**Author:** ${cs.author}`);
+  lines.push(`**Industry:** ${cs.industry}`);
+  if(cs.createdAt) lines.push(`**Date:** ${new Date(cs.createdAt).toLocaleDateString('en-IN')}`);
+  lines.push('');
+  if(cs.problem){lines.push('## Problem');lines.push(cs.problem);lines.push('');}
+  if(cs.framework){lines.push('## Framework');lines.push(cs.framework);lines.push('');}
+  if(cs.metric){lines.push('## Metric');lines.push(cs.metric);lines.push('');}
+  if(cs.decision){lines.push('## Decision');lines.push(cs.decision);lines.push('');}
+  if(cs.outcome){lines.push('## Outcome');lines.push(cs.outcome);lines.push('');}
+  if(cs.tags && cs.tags.length){
+    lines.push('## Tags');
+    lines.push(cs.tags.map(t=>`\`${t}\``).join(' '));
+    lines.push('');
+  }
+  const thoughts=cs.thoughts||[];
+  lines.push('## Thoughts');
+  if(!thoughts.length){
+    lines.push('_No thoughts yet._');
+    lines.push('');
+  }else{
+    thoughts.forEach((t,i)=>{
+      lines.push(`### ${i+1}. ${t.author} (${new Date(t.createdAt).toLocaleDateString('en-IN')})`);
+      lines.push('');
+      lines.push(t.text || '');
+      if(t.image) lines.push(`\n![attachment](${t.image})`);
+      lines.push('');
+    });
+  }
+  return lines.join('\n');
+}
+function getCaseById(id){
+  const cs=state.caseStudies.find(x=>x.id===id);
+  return cs || null;
+}
+function exportCaseStudyMarkdown(id){
+  const cs=getCaseById(id);
+  if(!cs){alert('Case study not found in current page state.');return;}
+  const md=caseStudyToMarkdown(cs);
+  const safeTitle=String(cs.title||('case-study-'+id)).replace(/[^a-z0-9]+/gi,'-').replace(/(^-|-$)/g,'');
+  downloadText(`case-study-${safeTitle}.md`, md);
+}
+function exportCaseStudyPDF(id){
+  const csEl=document.querySelector(`.cs-card[data-cs-id="${id}"]`);
+  if(!csEl){alert('Case study not found in DOM.');return;}
+  // trigger print; CSS shows only .cs-card.print-target
+  document.querySelectorAll('.cs-card.print-target').forEach(e=>e.classList.remove('print-target'));
+  csEl.classList.add('print-target');
+  window.print();
+  // cleanup after print dialog opens
+  setTimeout(()=>csEl.classList.remove('print-target'),500);
+}
 </script>
 </body>
 </html>
