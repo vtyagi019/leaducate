@@ -276,7 +276,7 @@ async function uploadMedia(media){
 
 function parseHash(){
   const parts=location.hash.replace(/^#\/?/,'').split('/').filter(Boolean);
-  const known=['home','ask','question','profile','leaderboard','cases','add-case','interviews','new-interview','interview'];
+const known=['home','ask','question','profile','leaderboard','cases','add-case'];
   const route=known.includes(parts[0])?parts[0]:'home';
   const qId=route==='question'&&parts[1]?Number(parts[1]):null;
   const interviewId=route==='interview'&&parts[1]?Number(parts[1]):null;
@@ -301,10 +301,7 @@ function loadRoute(){
   else if(state.route==='profile') loadProfile();
   else if(state.route==='leaderboard') loadLeaderboard();
   else if(state.route==='cases') loadCases();
-  else if(state.route==='interviews') loadInterviews();
-  else if(state.route==='new-interview') render();
-  else if(state.route==='interview') loadInterview(state.interviewId);
-  else render();
+else render();
 }
 
 async function loadHome(){render();try{const qs=new URLSearchParams({sort:state.sort});if(state.filter!=='All')qs.set('subject',state.filter);const d=await api('/questions?'+qs);state.questions=d.questions;state.openCount=d.openCountTotal;state.avgSolve=d.avgSolveMinutes;state.loadErr=null;}catch(e){state.loadErr=e.message;}render();}
@@ -322,6 +319,13 @@ async function loadInterviews(){
 async function loadInterview(id){
   render();
 }
+
+// Interview workspace disabled (Coming soon). Remove any accidental API calls by default.
+function createInterview(){ /* coming soon */ }
+function processInterview(){ /* coming soon */ }
+async function exportInterviewMarkdown(){ /* coming soon */ }
+function exportInterviewPDF(){ /* coming soon */ }
+
 
 
 async function primeStats(){try{const d=await api('/questions?sort=new');state.openCount=d.openCountTotal;}catch(e){}}
@@ -575,7 +579,7 @@ function synthHtml(){
 const LOGO_SVG=`<svg class="logo-icon" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><rect width="32" height="32" rx="9" fill="#7C3AED"/><path d="M6 17l5-5 9 9 6-10" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="25" cy="8" r="3" fill="#A78BFA"/></svg>`;
 
 function viewTopbar(){
-const links=[['home','Home'],['ask','Ask'],['cases','Case Studies'],['interviews','Interviews'],['leaderboard','Leaderboard'],['profile','Profile']];
+const links=[['home','Home'],['ask','Ask'],['cases','Case Studies'],['leaderboard','Leaderboard'],['profile','Profile']];
   return`<div class="topbar">
     <a href="#/home" class="logo-wrap">
       ${LOGO_SVG}
