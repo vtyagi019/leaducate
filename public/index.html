@@ -238,7 +238,7 @@ const SUBJECTS={'Product Management':'#7C3AED','Prioritization':'#6366F1','Metri
 const RANK_ICONS=['🥇','🥈','🥉'];
 
 let state={
-  route:'home',qId:null,
+  route:'home',qId:null,interviewId:null,
   currentUser:localStorage.getItem('lu_user')||null,
   questions:[],openCount:0,avgSolve:0,
   question:null, synthesis:null, synthLoading:false,
@@ -249,6 +249,9 @@ let state={
   draftSubject:null,
   askMedia:null,ansMedia:null,recording:false,
   similar:[],
+  // interview workspace
+  interviews:[],interview:null,interviewTab:'insights',interviewLoading:false,
+  draftInterviewTitle:null, draftInterviewTranscript:null, draftInterviewFile:null,
   formErr:null,authErr:null,authModal:false,
   authMsg:null, pendingAfterAuth:null,
   loadErr:null
@@ -273,20 +276,22 @@ async function uploadMedia(media){
 
 function parseHash(){
   const parts=location.hash.replace(/^#\/?/,'').split('/').filter(Boolean);
-  const known=['home','ask','question','profile','leaderboard','cases','add-case'];
+  const known=['home','ask','question','profile','leaderboard','cases','add-case','interviews','new-interview','interview'];
   const route=known.includes(parts[0])?parts[0]:'home';
   const qId=route==='question'&&parts[1]?Number(parts[1]):null;
-  return{route,qId};
+  const interviewId=route==='interview'&&parts[1]?Number(parts[1]):null;
+  return{route,qId,interviewId};
 }
 function navigate(route,qId){
   const t='#/'+route+(qId?'/'+qId:'');
   if(location.hash===t) onHashChange(); else location.hash=t;
 }
 function onHashChange(){
-  const{route,qId}=parseHash();
-  state.route=route;state.qId=qId;state.formErr=null;
+  const{route,qId,interviewId}=parseHash();
+  state.route=route;state.qId=qId;state.interviewId=interviewId;state.formErr=null;
   state.askMedia=null;state.ansMedia=null;state.similar=[];
   state.synthesis=null;state.synthLoading=false;
+  state.interview=null;state.interviewTab='insights';state.interviewLoading=false;
   window.scrollTo(0,0);
   loadRoute();
 }
@@ -296,6 +301,9 @@ function loadRoute(){
   else if(state.route==='profile') loadProfile();
   else if(state.route==='leaderboard') loadLeaderboard();
   else if(state.route==='cases') loadCases();
+  else if(state.route==='interviews') loadInterviews();
+  else if(state.route==='new-interview') render();
+  else if(state.route==='interview') loadInterview(state.interviewId);
   else render();
 }
 
@@ -306,6 +314,35 @@ function patchSynth(){const el=document.getElementById('synth-box');if(el)el.inn
 async function loadProfile(){if(!state.currentUser){render();return;}render();try{const d=await api('/users/'+encodeURIComponent(state.currentUser));state.profile=d.profile;}catch(e){state.loadErr=e.message;}render();}
 async function loadLeaderboard(){render();try{const d=await api('/leaderboard');state.leaderboard=d.leaderboard;}catch(e){state.loadErr=e.message;}render();}
 async function loadCases(){render();try{const d=await api('/case-studies');state.caseStudies=d.caseStudies;}catch(e){state.loadErr=e.message;}render();}
+
+async function loadInterviews(){
+  render();
+  try{
+    const d=await api('/interviews');
+    state.interviews=d.interviews||[];
+    state.loadErr=null;
+  }catch(e){
+    state.loadErr=e.message;
+  }
+  render();
+}
+
+async function loadInterview(id){
+  render();
+  if(!id) return;
+  state.interviewLoading=true;
+  try{
+    const d=await api('/interviews/'+id);
+    state.interview=d.interview;
+    state.loadErr=null;
+  }catch(e){
+    state.interview=null;
+    state.loadErr=e.message;
+  }
+  state.interviewLoading=false;
+  render();
+}
+
 async function primeStats(){try{const d=await api('/questions?sort=new');state.openCount=d.openCountTotal;}catch(e){}}
 
 function requireAuth(action){if(!state.currentUser){state.pendingAfterAuth=action;state.authMsg=null;state.authErr=null;state.authModal=true;render();return false;}return true;}
@@ -472,7 +509,7 @@ function downloadText(filename, text){
   document.body.appendChild(a);
   a.click();
   a.remove();
-  URL.revokeObjectURL(url);
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 
 function caseStudyToMarkdown(c, options = {}){
@@ -557,7 +594,7 @@ function synthHtml(){
 const LOGO_SVG=`<svg class="logo-icon" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><rect width="32" height="32" rx="9" fill="#7C3AED"/><path d="M6 17l5-5 9 9 6-10" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="25" cy="8" r="3" fill="#A78BFA"/></svg>`;
 
 function viewTopbar(){
-  const links=[['home','Home'],['ask','Ask'],['cases','Case Studies'],['leaderboard','Leaderboard'],['profile','Profile']];
+  const links=[['home','Home'],['ask','Ask'],['cases','Case Studies'],['interviews','Interviews'],['leaderboard','Leaderboard'],['profile','Profile']];
   return`<div class="topbar">
     <a href="#/home" class="logo-wrap">
       ${LOGO_SVG}
@@ -830,6 +867,222 @@ function viewAddCase(){
   </div>`;
 }
 
+function viewInterviews(){
+  return `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+      <div><h1 style="font-size:22px;margin-bottom:4px">Interview Workspace</h1><p style="color:var(--muted);font-size:13px">Turn transcripts into insights + drill-down actions.</p></div>
+      <a href="#/new-interview" class="btn btn-primary">+ New interview</a>
+    </div>
+    ${state.loadErr?`<div class="empty"><h3>${esc(state.loadErr)}</h3></div>`:''}
+    ${!state.interviews.length?`<div class="empty"><h3>No interviews yet</h3><p>Upload/paste a transcript to get AI insights.</p></div>`:
+      state.interviews.map(i=>`
+        <div class="cs-card" style="padding:16px 20px" >
+          <div class="cs-title">${esc(i.title)}</div>
+          <div class="cs-meta">${esc(i.author)} · ${new Date(i.createdAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})} · <span style="color:var(--muted)">${esc(i.status)}</span></div>
+          <div class="export-row" style="margin-top:10px">
+            <button class="export-btn" onclick="navigate('interview',${i.id})">Open report</button>
+            ${i.status==='processed'?`<button class="export-btn" onclick="exportInterviewMarkdown(${i.id})">⬇️ Export Markdown</button>`:''}
+          </div>
+        </div>
+      `).join('')}
+  `;
+}
+
+function viewNewInterview(){
+  return `
+    <div class="form-wrap">
+      <h1>New Interview</h1>
+      <p class="sub">Paste transcript (or upload file) — then press Process.</p>
+      <div class="card">
+        ${state.formErr?`<div class="err" style="margin-bottom:12px">${esc(state.formErr)}</div>`:''}
+        <form onsubmit="createInterview(event)">
+          <label>Title</label>
+          <input type="text" name="title" placeholder="e.g. Product sense round — 45 min" />
+
+          <label>Attach (optional)</label>
+          <input type="file" id="int-file" accept="text/plain" onchange="pickInterviewFile(event)" />
+
+          <label>Transcript (paste)</label>
+          <textarea name="transcript" placeholder="Paste interview transcript here…" style="min-height:160px"></textarea>
+
+          <div class="formfoot" style="justify-content:space-between">
+            <button type="button" class="btn btn-ghost" onclick="navigate('interviews')">Cancel</button>
+            <button type="submit" class="btn btn-primary">Create</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
+}
+
+function viewInterviewReport(){
+  const i = state.interview;
+  if(state.interviewLoading) return `<div class="empty"><h3>Loading…</h3></div>`;
+  if(!i) return `<div class="empty"><h3>${state.loadErr?esc(state.loadErr):'Interview not found'}</h3></div>`;
+
+  const tabs = [
+    ['insights','Insights'],
+    ['quotes','Quotes'],
+    ['actions','Actions']
+  ];
+
+  const insightsHtml = (i.insights||[]).map(x=>`
+    <div class="cs-field" style="margin-bottom:10px;padding:12px 12px;border:1px solid var(--border);border-radius:10px;background:rgba(26,26,53,.6)">
+      <div class="cs-meta" style="margin-bottom:6px">Theme</div>
+      <div class="fv" style="font-size:14px">${esc(x.theme)} <span style="color:var(--muted);font-size:12px">(${x.points} pts)</span></div>
+      <div class="fv" style="font-size:13px;color:#C4C4D4;white-space:pre-wrap;margin-top:6px">${esc(x.summary)}</div>
+    </div>
+  `).join('');
+
+  const quotesHtml = (i.quotes||[]).map(q=>`
+    <div class="cs-field" style="margin-bottom:10px;padding:12px 12px;border:1px solid var(--border);border-radius:10px;background:rgba(26,26,53,.6)">
+      <div class="cs-meta" style="margin-bottom:6px">${esc(q.speaker)} · ${esc(q.timestamp||'')}</div>
+      <div class="fv" style="font-size:14px;color:#C4C4D4">${esc(q.quote)}</div>
+    </div>
+  `).join('');
+
+  const actionsHtml = (i.actions||[]).map(a=>`
+    <div class="cs-field" style="margin-bottom:10px;padding:12px 12px;border:1px solid var(--border);border-radius:10px;background:rgba(26,26,53,.6)">
+      <div class="cs-meta" style="margin-bottom:6px">${esc(a.priority||'')} priority · ${esc(a.owner||'')}</div>
+      <div class="fv" style="font-size:14px;color:var(--text)">${esc(a.title)}</div>
+      <div class="fv" style="font-size:13px;color:#C4C4D4;white-space:pre-wrap;margin-top:6px">${esc(a.rationale||'')}</div>
+    </div>
+  `).join('');
+
+  const tabBody = state.interviewTab==='insights'?insightsHtml:
+    state.interviewTab==='quotes'?quotesHtml:
+    actionsHtml;
+
+  return `
+    <div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+        <div>
+          <h1 style="font-size:22px;margin-bottom:4px">${esc(i.title)}</h1>
+          <p style="color:var(--muted);font-size:13px">${esc(i.author)} · ${new Date(i.createdAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})} · <span style="font-weight:700;color:var(--text)" >${esc(i.status)}</span></p>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          ${i.status!=='processed'?`<button class="btn btn-primary" onclick="processInterview(${i.id})">⚡ Process</button>`:''}
+          ${i.status==='processed'?`<button class="export-btn" onclick="exportInterviewMarkdown(${i.id})">⬇️ Export Markdown</button><button class="export-btn" onclick="exportInterviewPDF(${i.id})">🖨️ Export PDF</button>`:''}
+          <button class="btn btn-ghost" onclick="navigate('interviews')">Back</button>
+        </div>
+      </div>
+
+      <div class="ptabs">
+        ${tabs.map(([t,label])=>`<button class="${state.interviewTab===t?'active':''}" onclick="state.interviewTab='${t}';render()">${label}</button>`).join('')}
+      </div>
+
+      <div class="ai-box" style="margin-bottom:14px">
+        <div class="ai-label">✦ Report</div>
+        <div class="ai-text" style="color:#C4C4D4">Mock AI pipeline output generated from the transcript. Replace with real LLM later.</div>
+      </div>
+
+      <div id="interview-report" class="print-target" data-int-id="${i.id}">
+        ${tabBody||`<div style="color:var(--muted);font-size:13px">Nothing to show yet. Click Process.</div>`}
+      </div>
+    </div>
+  `;
+}
+
+function pickInterviewFile(e){
+  const f=e.target.files[0];
+  if(!f) return;
+  if(!f.type || !f.type.includes('text')) {
+    alert('Please upload a .txt file');
+    return;
+  }
+  state.draftInterviewFile=f;
+}
+
+async function createInterview(e){
+  e.preventDefault();
+  const f=e.target;
+  const title=f.elements.title.value.trim();
+  let transcript=f.elements.transcript.value;
+
+  if(state.draftInterviewFile){
+    const content = await state.draftInterviewFile.text();
+    transcript = (transcript||'') + '\n' + content;
+  }
+
+  const doPost = async()=>{
+    state.formErr=null;
+    const d = await api('/interviews',{method:'POST',body:{title,author:state.currentUser,transcript}});
+    navigate('interview',d.interview.id);
+  };
+
+  if(!requireAuth(doPost)) return;
+  try{ await doPost(); }catch(err){ state.formErr=err.message; render(); }
+}
+
+async function processInterview(id){
+  try{
+    await api('/interviews/'+id+'/process',{method:'POST',body:{}});
+    await loadInterview(id);
+  }catch(err){ alert(err.message || 'Process failed'); }
+}
+
+function escMd(s){return esc(s).replace(/\n/g,'\n');}
+
+function interviewToMarkdown(i){
+  const md=[];
+  md.push(`# ${i.title}`);
+  md.push('');
+  md.push(`**Author:** ${i.author}`);
+  md.push(`**Created:** ${i.createdAt?new Date(i.createdAt).toISOString():''}`);
+  md.push('');
+
+  md.push('## Insights');
+  const ins=i.insights||[];
+  if(!ins.length) md.push('_No insights yet._');
+  ins.forEach(x=>{
+    md.push(`### ${x.theme} (${x.points} pts)`);
+    md.push(x.summary||'');
+    md.push('');
+  });
+
+  md.push('## Quotes');
+  const qs=i.quotes||[];
+  if(!qs.length) md.push('_No quotes yet._');
+  qs.forEach(q=>{
+    md.push(`- **${q.speaker}** (${q.timestamp||''})`);
+    md.push(`  - ${q.quote||''}`);
+  });
+  md.push('');
+
+  md.push('## Actions');
+  const acts=i.actions||[];
+  if(!acts.length) md.push('_No actions yet._');
+  acts.forEach(a=>{
+    md.push(`### [${a.priority||''}] ${a.title}`);
+    md.push(`Owner: ${a.owner||''}`);
+    md.push(`Rationale: ${a.rationale||''}`);
+    md.push('');
+  });
+
+  return md.join('\n');
+}
+
+async function exportInterviewMarkdown(id){
+  try{
+    if(state.interview && state.interview.id===id){
+      downloadText(`interview-${id}.md`, interviewToMarkdown(state.interview));
+      return;
+    }
+    const d=await api('/interviews/'+id);
+    downloadText(`interview-${id}.md`, interviewToMarkdown(d.interview));
+  }catch(e){ alert(e.message || 'Export failed'); }
+}
+
+function exportInterviewPDF(id){
+  try{
+    document.querySelectorAll('.print-target').forEach(el=>el.classList.remove('print-target'));
+    const el=document.querySelector(`#interview-report[data-int-id="${id}"]`);
+    if(el) el.classList.add('print-target');
+    window.print();
+  }catch(e){ alert(e.message || 'PDF export failed'); }
+}
+
+
 function pickCaseImage(e){
   const f=e.target.files[0];
   if(!f) return;
@@ -875,6 +1128,9 @@ function render(){
   else if(state.route==='leaderboard') page=viewLeaderboard();
   else if(state.route==='cases') page=viewCases();
   else if(state.route==='add-case') page=viewAddCase();
+  else if(state.route==='interviews') page=viewInterviews();
+  else if(state.route==='new-interview') page=viewNewInterview();
+  else if(state.route==='interview') page=viewInterviewReport();
   document.getElementById('root').innerHTML=`${viewTopbar()}<main>${page}</main>${viewAuthModal()}`;
 }
 

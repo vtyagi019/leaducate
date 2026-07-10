@@ -764,10 +764,175 @@ app.get('/api/case-studies', async (req, res) => {
   }
 });
 
+// ---------- interviews (AI workspace - mock pipeline) ----------
+function nowIso(ts){
+  return ts ? new Date(ts).toISOString() : new Date().toISOString();
+}
+function mockProcessTranscript(transcript=''){
+  const text = String(transcript || '');
+  const words = text.split(/\s+/).filter(Boolean);
+  const sampleQuote = (speaker, i) => ({
+    id: i + 1,
+    speaker,
+    quote: words.slice(i * 12, (i + 1) * 12 + 3).join(' ') || `“${speaker} shared a key insight about their experience.”`,
+    timestamp: i % 2 === 0 ? '00:03:12' : '00:08:47'
+  });
+
+  const themes = [
+    { theme: 'Workflow friction', points: 78, summary: 'Participants repeatedly described steps that slow down progress and create rework.' },
+    { theme: 'Motivation + outcomes', points: 64, summary: 'What moves the user is outcome clarity and reduced uncertainty.' },
+    { theme: 'Information gaps', points: 52, summary: 'Users struggle when requirements are missing or terminology isn’t aligned.' }
+  ];
+
+  const insights = themes.map((t,i)=>({
+    id: i + 1,
+    theme: t.theme,
+    points: t.points,
+    summary: t.summary,
+    evidenceQuoteIds: [1,2,3].slice(0, 2)
+  }));
+
+  const quotes = [
+    sampleQuote('Interviewer', 0),
+    sampleQuote('Participant A', 1),
+    sampleQuote('Participant B', 2)
+  ].map((q, idx) => ({...q, id: idx + 1}));
+
+  const actions = [
+    { id: 1, title: 'Reduce one decision step by adding defaults', priority: 'High', owner: 'PM', rationale: 'Most friction maps to decision latency.' },
+    { id: 2, title: 'Add a glossary + example-driven guidance', priority: 'Medium', owner: 'Design', rationale: 'Terminology gaps caused confusion.' },
+    { id: 3, title: 'Instrument success metric & track activation', priority: 'Medium', owner: 'Analytics', rationale: 'Outcome clarity is a strong lever for motivation.' }
+  ];
+
+  return { insights, quotes, actions };
+}
+
+app.get('/api/interviews', async (req, res) => {
+  try {
+    const interviews = await db.collection('interviews')
+      .find({})
+      .sort({ createdAt: -1 })
+      .limit(50)
+      .toArray();
+    res.json({
+      interviews: interviews.map(i => ({
+        id: i.id,
+        title: i.title,
+        author: i.author,
+        createdAt: i.createdAt,
+        status: i.status,
+        processedAt: i.processedAt || null
+      }))
+    });
+  } catch (error) {
+    console.error('Get interviews error:', error);
+    fail(res, 500, 'Server error');
+  }
+});
+
+app.post('/api/interviews', async (req, res) => {
+  try {
+    const { title = '', author = '', transcript = '' } = req.body || {};
+    if (!author) return fail(res, 401, 'Sign in before creating an interview.');
+    if (String(title).trim().length < 4) return fail(res, 400, 'Title is too short.');
+    if (String(transcript).trim().length < 20) return fail(res, 400, 'Paste a longer transcript (at least 20 chars).');
+
+    const meta = await db.collection('meta').findOne({});
+    const nextId = meta?.nextInterviewId || 1;
+
+    const interview = {
+      id: nextId,
+      title: String(title).trim(),
+      author,
+      transcript: String(transcript),
+      createdAt: Date.now(),
+      status: 'draft',
+      processedAt: null
+    };
+
+    await db.collection('interviews').insertOne(interview);
+    await db.collection('meta').updateOne({}, { $set: { nextInterviewId: nextId + 1 } }, { upsert: true });
+
+    res.status(201).json({ interview: { id: interview.id, title: interview.title, author: interview.author, createdAt: interview.createdAt, status: interview.status } });
+  } catch (error) {
+    console.error('Create interview error:', error);
+    fail(res, 500, 'Server error');
+  }
+});
+
+app.get('/api/interviews/:id', async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const interview = await db.collection('interviews').findOne({ id });
+    if (!interview) return fail(res, 404, 'Interview not found');
+
+    const [insights, quotes, actions] = await Promise.all([
+      db.collection('interviewInsights').find({ interviewId: id }).sort({ id: 1 }).toArray(),
+      db.collection('interviewQuotes').find({ interviewId: id }).sort({ id: 1 }).toArray(),
+      db.collection('interviewActions').find({ interviewId: id }).sort({ priority: 1, id: 1 }).toArray()
+    ]);
+
+    res.json({
+      interview: {
+        id: interview.id,
+        title: interview.title,
+        author: interview.author,
+        createdAt: interview.createdAt,
+        status: interview.status,
+        processedAt: interview.processedAt,
+        insights: insights.map(x => ({ id: x.id, theme: x.theme, points: x.points, summary: x.summary, evidenceQuoteIds: x.evidenceQuoteIds || [] })),
+        quotes: quotes.map(x => ({ id: x.id, speaker: x.speaker, quote: x.quote, timestamp: x.timestamp })),
+        actions: actions.map(x => ({ id: x.id, title: x.title, priority: x.priority, owner: x.owner, rationale: x.rationale }))
+      }
+    });
+  } catch (error) {
+    console.error('Get interview error:', error);
+    fail(res, 500, 'Server error');
+  }
+});
+
+app.post('/api/interviews/:id/process', async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const interview = await db.collection('interviews').findOne({ id });
+    if (!interview) return fail(res, 404, 'Interview not found');
+
+    if (interview.status === 'processing') return res.json({ ok: true, status: 'processing' });
+
+    await db.collection('interviews').updateOne({ id }, { $set: { status: 'processing' } });
+
+    // Mock async processing delay
+    await new Promise(r => setTimeout(r, 400));
+    const { insights, quotes, actions } = mockProcessTranscript(interview.transcript);
+
+    await db.collection('interviewInsights').deleteMany({ interviewId: id });
+    await db.collection('interviewQuotes').deleteMany({ interviewId: id });
+    await db.collection('interviewActions').deleteMany({ interviewId: id });
+
+    if (insights?.length) {
+      await db.collection('interviewInsights').insertMany(insights.map(x => ({ ...x, interviewId: id })));
+    }
+    if (quotes?.length) {
+      await db.collection('interviewQuotes').insertMany(quotes.map(x => ({ ...x, interviewId: id })));
+    }
+    if (actions?.length) {
+      await db.collection('interviewActions').insertMany(actions.map((x, idx) => ({ ...x, interviewId: id, priority: x.priority === 'High' ? 0 : x.priority === 'Medium' ? 1 : 2 })));
+    }
+
+    await db.collection('interviews').updateOne({ id }, { $set: { status: 'processed', processedAt: Date.now() } });
+
+    res.json({ ok: true, status: 'processed' });
+  } catch (error) {
+    console.error('Process interview error:', error);
+    fail(res, 500, 'Server error');
+  }
+});
+
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Leaducate backend running on port ${PORT}`);
 });
+
 
