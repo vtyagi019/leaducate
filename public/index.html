@@ -860,59 +860,6 @@ function viewInterviewReport(){
   return `<div class="empty"><h3>Coming soon</h3><p>Interview workspace will be available soon.</p></div>`;
 }
 
-
-
-
-
-  const quotesHtml = (i.quotes||[]).map(q=>`
-    <div class="cs-field" style="margin-bottom:10px;padding:12px 12px;border:1px solid var(--border);border-radius:10px;background:rgba(26,26,53,.6)">
-      <div class="cs-meta" style="margin-bottom:6px">${esc(q.speaker)} · ${esc(q.timestamp||'')}</div>
-      <div class="fv" style="font-size:14px;color:#C4C4D4">${esc(q.quote)}</div>
-    </div>
-  `).join('');
-
-  const actionsHtml = (i.actions||[]).map(a=>`
-    <div class="cs-field" style="margin-bottom:10px;padding:12px 12px;border:1px solid var(--border);border-radius:10px;background:rgba(26,26,53,.6)">
-      <div class="cs-meta" style="margin-bottom:6px">${esc(a.priority||'')} priority · ${esc(a.owner||'')}</div>
-      <div class="fv" style="font-size:14px;color:var(--text)">${esc(a.title)}</div>
-      <div class="fv" style="font-size:13px;color:#C4C4D4;white-space:pre-wrap;margin-top:6px">${esc(a.rationale||'')}</div>
-    </div>
-  `).join('');
-
-  const tabBody = state.interviewTab==='insights'?insightsHtml:
-    state.interviewTab==='quotes'?quotesHtml:
-    actionsHtml;
-
-  return `
-    <div>
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:12px">
-        <div>
-          <h1 style="font-size:22px;margin-bottom:4px">${esc(i.title)}</h1>
-          <p style="color:var(--muted);font-size:13px">${esc(i.author)} · ${new Date(i.createdAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})} · <span style="font-weight:700;color:var(--text)" >${esc(i.status)}</span></p>
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          ${i.status!=='processed'?`<button class="btn btn-primary" onclick="processInterview(${i.id})">⚡ Process</button>`:''}
-          ${i.status==='processed'?`<button class="export-btn" onclick="exportInterviewMarkdown(${i.id})">⬇️ Export Markdown</button><button class="export-btn" onclick="exportInterviewPDF(${i.id})">🖨️ Export PDF</button>`:''}
-          <button class="btn btn-ghost" onclick="navigate('interviews')">Back</button>
-        </div>
-      </div>
-
-      <div class="ptabs">
-        ${tabs.map(([t,label])=>`<button class="${state.interviewTab===t?'active':''}" onclick="state.interviewTab='${t}';render()">${label}</button>`).join('')}
-      </div>
-
-      <div class="ai-box" style="margin-bottom:14px">
-        <div class="ai-label">✦ Report</div>
-        <div class="ai-text" style="color:#C4C4D4">Mock AI pipeline output generated from the transcript. Replace with real LLM later.</div>
-      </div>
-
-      <div id="interview-report" class="print-target" data-int-id="${i.id}">
-        ${tabBody||`<div style="color:var(--muted);font-size:13px">Nothing to show yet. Click Process.</div>`}
-      </div>
-    </div>
-  `;
-}
-
 function pickInterviewFile(e){
   const f=e.target.files[0];
   if(!f) return;
