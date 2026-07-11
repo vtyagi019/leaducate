@@ -227,14 +227,28 @@ main{max-width:900px;margin:0 auto;padding:32px 20px 100px;}
 .modal p{color:var(--muted);font-size:13px;margin-bottom:16px;}
 .modal .welcome{font-size:12px;color:var(--good);margin-top:6px;}
 
+/* blog images */
+.blog-images{display:flex;gap:12px;margin:16px 0;flex-wrap:wrap;justify-content:center;}
+.blog-image-item{flex:1;min-width:120px;max-width:300px;border-radius:8px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,.15);cursor:pointer;transition:transform .2s,box-shadow .2s;}
+.blog-image-item:hover{transform:scale(1.02);box-shadow:0 6px 16px rgba(0,0,0,.2);}
+.blog-image-item img{width:100%;height:auto;display:block;object-fit:cover;aspect-ratio:4/3;}
+
+/* lightbox */
+.lightbox{position:fixed;inset:0;background:rgba(0,0,0,.9);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px;opacity:0;pointer-events:none;transition:opacity .3s;}
+.lightbox.active{opacity:1;pointer-events:auto;}
+.lightbox-content{max-width:90vw;max-height:90vh;position:relative;}
+.lightbox-content img{max-width:100%;max-height:90vh;width:auto;height:auto;display:block;border-radius:8px;}
+.lightbox-close{position:absolute;top:-40px;right:0;background:none;border:none;color:#fff;font-size:36px;cursor:pointer;padding:5px 10px;}
+.lightbox-close:hover{color:var(--purple-light);}
+
 @media(max-width:640px){
   .topbar{padding:12px 16px;}
   nav.mainnav a{padding:7px 10px;font-size:13px;}
   .lb-header,.lb-row{grid-template-columns:40px 1fr 60px;}
   .lb-ans{display:none;}
   .hero-strip{flex-direction:column;align-items:flex-start;}
+  .blog-image-item{min-width:100px;max-width:200px;}
 }
-</style>
 </head>
 <body>
 <div id="root"></div>
@@ -1221,6 +1235,31 @@ async function submitBlog(e){
   if(!requireAuth(doPost))return;await doPost();
 }
 
+// Lightbox functions
+function openLightbox(imgSrc){
+  // Create lightbox if not exists
+  let lb = document.getElementById('blog-lightbox');
+  if(!lb){
+    lb = document.createElement('div');
+    lb.id = 'blog-lightbox';
+    lb.className = 'lightbox';
+    lb.innerHTML = `<div class="lightbox-content"><button class="lightbox-close" onclick="closeLightbox()">&times;</button><img src="" alt="Full size image"></div>`;
+    document.body.appendChild(lb);
+    lb.addEventListener('click', (e) => {
+      if(e.target === lb) closeLightbox();
+    });
+    document.addEventListener('keydown', (e) => {
+      if(e.key === 'Escape') closeLightbox();
+    });
+  }
+  lb.querySelector('img').src = imgSrc;
+  lb.classList.add('active');
+}
+function closeLightbox(){
+  const lb = document.getElementById('blog-lightbox');
+  if(lb) lb.classList.remove('active');
+}
+
 function viewBlogs(){
   if(!state.blogs || state.blogs.length===0){
     return `<div class="card">
@@ -1248,7 +1287,10 @@ function viewBlogs(){
         </div>
         ${b.title ? `<div style="font-size:16px;font-weight:600;margin-bottom:8px">${esc(b.title)}</div>` : ''}
         ${b.content ? `<div style="font-size:14px;color:#C4C4D4;line-height:1.6;margin-bottom:12px;white-space:pre-wrap">${esc(b.content).substring(0,300)}${b.content.length>300?'...':''}</div>` : ''}
-        ${b.images && b.images.length ? `<div style="margin-bottom:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px">${b.images.map(img=>`<img src="${img}" alt="blog image" style="width:100%;border-radius:8px;object-fit:cover">`).join('')}</div>` : ''}
+        ${b.images && b.images.length ? `
+          <div class="blog-images">
+            ${b.images.map(img=>`<div class="blog-image-item" onclick="openLightbox('${img}')"><img src="${img}" alt="blog image"></div>`).join('')}
+          </div>` : ''}
         ${b.pdf ? `<div style="margin-bottom:12px"><a href="${b.pdf}" target="_blank" class="btn btn-ghost btn-sm">📄 View attached PDF</a></div>` : ''}
         <div style="display:flex;gap:16px;margin-top:8px;color:var(--muted);font-size:13px;border-top:1px solid var(--border);padding-top:12px">
           <span>👍 <button onclick="likeBlog(${b.id})" style="background:none;border:none;color:inherit;cursor:pointer">${b.likes||0} likes</button></span>
