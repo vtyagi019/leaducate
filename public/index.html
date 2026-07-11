@@ -257,6 +257,7 @@ let state={
   draftSubject:null,
   askMedia:null,ansMedia:null,recording:false,
   similar:[],
+  caseFiles:[],
   // interview workspace
   interviews:[],interview:null,interviewTab:'insights',interviewLoading:false,
   draftInterviewTitle:null, draftInterviewTranscript:null, draftInterviewFile:null,
@@ -504,6 +505,29 @@ async function submitCase(e){
   const doPost=async()=>{
     const tags=f.elements.tags.value.split(',').map(t=>t.trim()).filter(Boolean);
     try{
+      // Upload multiple images
+      let images = [];
+      if(state.caseFiles && state.caseFiles.length){
+        for(const cf of state.caseFiles){
+          const uploaded = await uploadMedia({
+            file: cf.file,
+            filename: cf.filename
+          });
+          if(uploaded) images.push(uploaded.url);
+        }
+      }
+
+      // Upload PDF
+      let pdfUrl = null;
+      if(state.casePDF){
+        const uploaded = await uploadMedia({
+          file: state.casePDF.file,
+          filename: state.casePDF.filename
+        });
+        if(uploaded) pdfUrl = uploaded.url;
+      }
+
+      // Upload legacy single image if exists
       let image=null;
       if(state.caseImg){
         image=await uploadMedia({
@@ -522,9 +546,12 @@ async function submitCase(e){
         decision:f.elements.decision.value.trim(),
         outcome:f.elements.outcome.value.trim(),
         tags,
-        image
+        images: images.length ? images : (image ? [image.url] : []),
+        pdf: pdfUrl
       }});
 
+      state.caseFiles=[];
+      state.casePDF=null;
       state.caseImg=null;
       render();
       navigate('cases');
@@ -913,9 +940,13 @@ function viewAddCase(){
         <label>Industry</label>
         <input type="text" name="industry" placeholder="e.g. Fintech, Edtech, SaaS, E-commerce">
 
-        <label>Attach an image (optional)</label>
-        <input type="file" id="case-image" accept="image/*" style="display:block" onchange="pickCaseImage(event)">
-        <div id="case-image-prev"></div>
+        <label>Attach images (optional, multiple allowed)</label>
+        <input type="file" id="case-images" accept="image/*" multiple style="display:block" onchange="pickCaseImages(event)">
+        <div id="case-images-prev"></div>
+
+        <label>Attach PDF (optional)</label>
+        <input type="file" id="case-pdf" accept="application/pdf" style="display:block" onchange="pickCasePDF(event)">
+        <div id="case-pdf-prev"></div>
 
         <label>Problem</label>
         <textarea name="problem" placeholder="What was the challenge you faced?" style="min-height:80px"></textarea>
@@ -1051,6 +1082,63 @@ function exportInterviewPDF(id){
   }catch(e){ alert(e.message || 'PDF export failed'); }
 */
 
+
+function pickCaseImages(e){
+  const files=Array.from(e.target.files);
+  if(!files.length) return;
+  state.caseFiles = files.map(f => ({
+    file: f,
+    previewUrl: URL.createObjectURL(f),
+    type: 'image',
+    filename: f.name
+  }));
+  patchCaseFilesPrev();
+}
+
+function pickCasePDF(e){
+  const f=e.target.files[0];
+  if(!f) return;
+  if(f.type !== 'application/pdf'){
+    alert('Please upload a PDF file');
+    return;
+  }
+  state.casePDF = {
+    file: f,
+    filename: f.name
+  };
+  patchCasePDFPrev();
+}
+
+function patchCaseFilesPrev(){
+  const el=document.getElementById('case-images-prev');
+  if(!el) return;
+  el.innerHTML = (state.caseFiles||[]).map((f,i)=>`
+    <div class="media-preview" style="display:inline-block;margin:5px">
+      <img src="${f.previewUrl}" alt="preview" style="max-width:120px;border-radius:6px">
+      <button type="button" class="rm-media" onclick="removeCaseFile(${i})">Remove</button>
+    </div>
+  `).join('');
+}
+
+function patchCasePDFPrev(){
+  const el=document.getElementById('case-pdf-prev');
+  if(!el) return;
+  el.innerHTML = state.casePDF ?
+    `<div class="media-preview" style="margin-top:10px">
+      <span style="color:var(--purple-light);font-size:13px">📄 ${state.casePDF.filename}</span>
+      <button type="button" class="rm-media" onclick="removeCasePDF()">Remove</button>
+    </div>` : '';
+}
+
+function removeCaseFile(idx){
+  state.caseFiles.splice(idx,1);
+  patchCaseFilesPrev();
+}
+
+function removeCasePDF(){
+  state.casePDF=null;
+  patchCasePDFPrev();
+}
 
 function pickCaseImage(e){
   const f=e.target.files[0];
