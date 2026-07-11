@@ -69,6 +69,12 @@ main{max-width:900px;margin:0 auto;padding:32px 20px 100px;}
 .card+.card{margin-top:10px;}
 
 /* home */
+#hero-3d{width:100%;height:280px;position:relative;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:24px;background:radial-gradient(ellipse at top,var(--purple-dim),transparent 70%);display:flex;align-items:center;justify-content:center;}
+#hero-3d canvas{display:block;}
+#hero-3d .hero-3d-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:none;padding:0 20px;}
+#hero-3d .hero-3d-overlay h1{font-size:30px;margin-bottom:6px;text-shadow:0 2px 24px rgba(0,0,0,.6);}
+#hero-3d .hero-3d-overlay p{color:var(--muted);font-size:14px;text-shadow:0 2px 24px rgba(0,0,0,.6);}
+@media(max-width:640px){#hero-3d{height:220px;}}
 .hero-strip{background:linear-gradient(135deg,var(--purple-dim),var(--surface));border:1px solid var(--border);border-radius:var(--radius);padding:24px 28px;margin-bottom:24px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;}
 .hero-strip h1{font-size:20px;margin-bottom:4px;}
 .hero-strip p{color:var(--muted);font-size:13px;}
@@ -83,7 +89,7 @@ main{max-width:900px;margin:0 auto;padding:32px 20px 100px;}
 .sortrow a{color:var(--muted);}
 .sortrow a.active-sort{color:var(--purple-light);font-weight:600;}
 
-/* qcard */
+/* qcard */ 
 .qcard{display:block;border:1px solid var(--border);background:var(--surface);border-radius:var(--radius);padding:18px 20px;margin-bottom:10px;transition:border-color .15s,transform .1s;}
 .qcard:hover{border-color:var(--purple);transform:translateY(-1px);}
 .subj-row{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);margin-bottom:6px;}
@@ -233,6 +239,8 @@ main{max-width:900px;margin:0 auto;padding:32px 20px 100px;}
 </head>
 <body>
 <div id="root"></div>
+<!-- 3D particle hero background (Three.js is loaded from CDN inside 3d.js) -->
+<script src="3d.js"></script>
 <script>
 const SUBJECTS={'Product Management':'#7C3AED','Prioritization':'#6366F1','Metrics':'#06B6D4','User Research':'#F59E0B','Growth':'#22C55E','Other':'#8B8BA7'};
 const RANK_ICONS=['🥇','🥈','🥉'];
@@ -651,7 +659,7 @@ function synthHtml(){
 const LOGO_SVG=`<svg class="logo-icon" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><rect width="32" height="32" rx="9" fill="#7C3AED"/><path d="M6 17l5-5 9 9 6-10" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="25" cy="8" r="3" fill="#A78BFA"/></svg>`;
 
 function viewTopbar(){
-const links=[['home','Home'],['ask','Ask'],['cases','Case Studies'],['interviews','Interviews'],['about','About'],['leaderboard','Leaderboard'],['profile','Profile']];
+  const links=[['home','Home'],['ask','Ask'],['cases','Case Study'],['interviews','Interview'],['profile','Profile'],['leaderboard','Leaderboard'],['about','About']];
   return`<div class="topbar">
     <a href="#/home" class="logo-wrap">
       ${LOGO_SVG}
@@ -669,6 +677,12 @@ function viewHome(){
   if(state.loadErr) return`<div class="empty"><h3>Couldn't load feed</h3><p>${esc(state.loadErr)}</p></div>`;
   const list=state.questions;
   return`
+  <div id="hero-3d">
+    <div class="hero-3d-overlay">
+      <h1>Get your doubt solved in minutes, not hours</h1>
+      <p>An AI-powered community for Product Managers — ask, answer, and level up.</p>
+    </div>
+  </div>
   <div class="hero-strip">
     <div><h1>Live doubt feed</h1><p style="color:var(--muted);font-size:13px;margin-top:4px;">Questions from the PM community — answer one, earn points.</p></div>
     <div class="hero-stat"><div class="num">${state.avgSolve||'—'}${state.avgSolve?'m':''}</div><div class="lbl">avg solve time</div></div>
@@ -924,6 +938,7 @@ function viewAddCase(){
   </div>`;
 }
 
+<!-- Interview workspace (coming soon - commented out as unused) -->
 function viewInterviews(){
   return `<div class="empty"><h3>Coming soon</h3><p>Interview workspace will be available soon.</p></div>`;
 }
@@ -936,6 +951,7 @@ function viewInterviewReport(){
   return `<div class="empty"><h3>Coming soon</h3><p>Interview workspace will be available soon.</p></div>`;
 }
 
+/* UNUSED - commented out
 function pickInterviewFile(e){
   const f=e.target.files[0];
   if(!f) return;
@@ -974,7 +990,7 @@ async function processInterview(id){
   }catch(err){ alert(err.message || 'Process failed'); }
 }
 
-function escMd(s){return esc(s).replace(/\n/g,'\n');}
+function escMd(s){return esc(s).replace(/\n/g,'\\n');}
 
 function interviewToMarkdown(i){
   const md=[];
@@ -1033,7 +1049,7 @@ function exportInterviewPDF(id){
     if(el) el.classList.add('print-target');
     window.print();
   }catch(e){ alert(e.message || 'PDF export failed'); }
-}
+*/
 
 
 function pickCaseImage(e){
@@ -1086,6 +1102,10 @@ function render(){
   else if(state.route==='new-interview') page=viewNewInterview();
   else if(state.route==='interview') page=viewInterviewReport();
   document.getElementById('root').innerHTML=`${viewTopbar()}<main>${page}</main>${viewAuthModal()}`;
+  // (Re)initialize the 3D particle hero whenever the home view is rendered.
+  if(state.route==='home' && typeof window.initLeaducate3D==='function'){
+    try{ window.initLeaducate3D(); }catch(e){ console.warn('3D hero init failed',e); }
+  }
 }
 
 setInterval(()=>{if(state.route==='home')loadHome();else if(state.route==='question'&&state.qId)loadQuestion(state.qId);},15000);
