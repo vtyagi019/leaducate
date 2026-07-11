@@ -252,6 +252,7 @@ let state={
   // interview workspace
   interviews:[],interview:null,interviewTab:'insights',interviewLoading:false,
   draftInterviewTitle:null, draftInterviewTranscript:null, draftInterviewFile:null,
+  authSubmitting:false,
   formErr:null,authErr:null,authModal:false,
   authMsg:null, pendingAfterAuth:null,
   loadErr:null
@@ -565,7 +566,7 @@ function elInfo(q){
   return{text:fmt(m)+' open',cls:m>=30?'hot':m>=10?'warn':'good'};
 }
 function fmt(m){if(m<1)return'<1m';if(m<60)return m+'m';return Math.floor(m/60)+'h '+(m%60)+'m';}
-function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&','<':'<','>':'>','"':'"',"'":'&#39;'}[c]));}
 function synthHtml(){
   if(state.synthLoading) return`<div class="ai-box"><div class="ai-label">✦ AI Synthesis</div><div class="ai-loading">Synthesizing answers…</div></div>`;
   if(!state.synthesis) return'';
@@ -743,7 +744,7 @@ function viewLeaderboard(){
         <div class="lb-av" style="background:${i===0?'#F59E0B':i===1?'#9CA3AF':i===2?'#CD7C2F':'var(--purple)'}">${ini(u.name)}</div>
         <div><div class="lb-name">${esc(u.name)}${u.name===state.currentUser?' (you)':''}</div><div class="lb-meta"><span class="badge-pill" style="font-size:10px;padding:2px 8px">${u.badge}</span></div></div>
       </div>
-      <div class="lb-ans">${u.answersGiven}</div>
+      <div class="lb-ans">${u.answered}</div>
       <div class="lb-pts">${u.points}</div>
     </div>`).join('')}
   </div>`;
@@ -858,59 +859,6 @@ function viewNewInterview(){
 
 function viewInterviewReport(){
   return `<div class="empty"><h3>Coming soon</h3><p>Interview workspace will be available soon.</p></div>`;
-}
-
-
-
-
-
-  const quotesHtml = (i.quotes||[]).map(q=>`
-    <div class="cs-field" style="margin-bottom:10px;padding:12px 12px;border:1px solid var(--border);border-radius:10px;background:rgba(26,26,53,.6)">
-      <div class="cs-meta" style="margin-bottom:6px">${esc(q.speaker)} · ${esc(q.timestamp||'')}</div>
-      <div class="fv" style="font-size:14px;color:#C4C4D4">${esc(q.quote)}</div>
-    </div>
-  `).join('');
-
-  const actionsHtml = (i.actions||[]).map(a=>`
-    <div class="cs-field" style="margin-bottom:10px;padding:12px 12px;border:1px solid var(--border);border-radius:10px;background:rgba(26,26,53,.6)">
-      <div class="cs-meta" style="margin-bottom:6px">${esc(a.priority||'')} priority · ${esc(a.owner||'')}</div>
-      <div class="fv" style="font-size:14px;color:var(--text)">${esc(a.title)}</div>
-      <div class="fv" style="font-size:13px;color:#C4C4D4;white-space:pre-wrap;margin-top:6px">${esc(a.rationale||'')}</div>
-    </div>
-  `).join('');
-
-  const tabBody = state.interviewTab==='insights'?insightsHtml:
-    state.interviewTab==='quotes'?quotesHtml:
-    actionsHtml;
-
-  return `
-    <div>
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:12px">
-        <div>
-          <h1 style="font-size:22px;margin-bottom:4px">${esc(i.title)}</h1>
-          <p style="color:var(--muted);font-size:13px">${esc(i.author)} · ${new Date(i.createdAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})} · <span style="font-weight:700;color:var(--text)" >${esc(i.status)}</span></p>
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          ${i.status!=='processed'?`<button class="btn btn-primary" onclick="processInterview(${i.id})">⚡ Process</button>`:''}
-          ${i.status==='processed'?`<button class="export-btn" onclick="exportInterviewMarkdown(${i.id})">⬇️ Export Markdown</button><button class="export-btn" onclick="exportInterviewPDF(${i.id})">🖨️ Export PDF</button>`:''}
-          <button class="btn btn-ghost" onclick="navigate('interviews')">Back</button>
-        </div>
-      </div>
-
-      <div class="ptabs">
-        ${tabs.map(([t,label])=>`<button class="${state.interviewTab===t?'active':''}" onclick="state.interviewTab='${t}';render()">${label}</button>`).join('')}
-      </div>
-
-      <div class="ai-box" style="margin-bottom:14px">
-        <div class="ai-label">✦ Report</div>
-        <div class="ai-text" style="color:#C4C4D4">Mock AI pipeline output generated from the transcript. Replace with real LLM later.</div>
-      </div>
-
-      <div id="interview-report" class="print-target" data-int-id="${i.id}">
-        ${tabBody||`<div style="color:var(--muted);font-size:13px">Nothing to show yet. Click Process.</div>`}
-      </div>
-    </div>
-  `;
 }
 
 function pickInterviewFile(e){
@@ -1068,74 +1016,6 @@ setInterval(()=>{if(state.route==='home')loadHome();else if(state.route==='quest
 window.addEventListener('hashchange',onHashChange);
 primeStats();
 onHashChange();
-
-// ---------------- export (case studies) ----------------
-function downloadText(filename, text){
-  const blob=new Blob([text],{type:'text/plain;charset=utf-8'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url;
-  a.download=filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(()=>URL.revokeObjectURL(url),1000);
-}
-function caseStudyToMarkdown(cs){
-  const lines=[];
-  lines.push(`# ${cs.title}`);
-  lines.push('');
-  lines.push(`**Author:** ${cs.author}`);
-  lines.push(`**Industry:** ${cs.industry}`);
-  if(cs.createdAt) lines.push(`**Date:** ${new Date(cs.createdAt).toLocaleDateString('en-IN')}`);
-  lines.push('');
-  if(cs.problem){lines.push('## Problem');lines.push(cs.problem);lines.push('');}
-  if(cs.framework){lines.push('## Framework');lines.push(cs.framework);lines.push('');}
-  if(cs.metric){lines.push('## Metric');lines.push(cs.metric);lines.push('');}
-  if(cs.decision){lines.push('## Decision');lines.push(cs.decision);lines.push('');}
-  if(cs.outcome){lines.push('## Outcome');lines.push(cs.outcome);lines.push('');}
-  if(cs.tags && cs.tags.length){
-    lines.push('## Tags');
-    lines.push(cs.tags.map(t=>`\`${t}\``).join(' '));
-    lines.push('');
-  }
-  const thoughts=cs.thoughts||[];
-  lines.push('## Thoughts');
-  if(!thoughts.length){
-    lines.push('_No thoughts yet._');
-    lines.push('');
-  }else{
-    thoughts.forEach((t,i)=>{
-      lines.push(`### ${i+1}. ${t.author} (${new Date(t.createdAt).toLocaleDateString('en-IN')})`);
-      lines.push('');
-      lines.push(t.text || '');
-      if(t.image) lines.push(`\n![attachment](${t.image})`);
-      lines.push('');
-    });
-  }
-  return lines.join('\n');
-}
-function getCaseById(id){
-  const cs=state.caseStudies.find(x=>x.id===id);
-  return cs || null;
-}
-function exportCaseStudyMarkdown(id){
-  const cs=getCaseById(id);
-  if(!cs){alert('Case study not found in current page state.');return;}
-  const md=caseStudyToMarkdown(cs);
-  const safeTitle=String(cs.title||('case-study-'+id)).replace(/[^a-z0-9]+/gi,'-').replace(/(^-|-$)/g,'');
-  downloadText(`case-study-${safeTitle}.md`, md);
-}
-function exportCaseStudyPDF(id){
-  const csEl=document.querySelector(`.cs-card[data-cs-id="${id}"]`);
-  if(!csEl){alert('Case study not found in DOM.');return;}
-  // trigger print; CSS shows only .cs-card.print-target
-  document.querySelectorAll('.cs-card.print-target').forEach(e=>e.classList.remove('print-target'));
-  csEl.classList.add('print-target');
-  window.print();
-  // cleanup after print dialog opens
-  setTimeout(()=>csEl.classList.remove('print-target'),500);
-}
 </script>
 </body>
 </html>

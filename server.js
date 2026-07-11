@@ -389,6 +389,27 @@ app.delete('/api/questions/:id/answers/:answerId', async (req, res) => {
   }
 });
 
+// ---------- AI synthesis endpoint ----------
+app.get('/api/questions/:id/synthesize', async (req, res) => {
+  try {
+    const q = await db.collection('questions').findOne({ id: Number(req.params.id) });
+    if (!q || q.hidden) return fail(res, 404, "This doubt doesn't exist (anymore).");
+    
+    const visible = q.answers.filter(a => !a.hidden);
+    if (!visible.length) return res.json({ synthesis: null });
+    
+    // Simple concatenation synthesis of visible answers
+    const parts = visible.map(a => a.text).filter(Boolean);
+    if (!parts.length) return res.json({ synthesis: null });
+    
+    const synthesis = parts.join('\n\n');
+    res.json({ synthesis });
+  } catch (error) {
+    console.error('Synthesize error:', error);
+    fail(res, 500, 'Server error');
+  }
+});
+
 // ---------- reporting / moderation ----------
 // Stand-in for AI moderation: enough reports auto-hides the content.
 // Replace the body of this handler with a call to a real moderation
