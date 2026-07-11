@@ -277,7 +277,7 @@ async function uploadMedia(media){
 
 function parseHash(){
   const parts=location.hash.replace(/^#\/?/,'').split('/').filter(Boolean);
-  const known=['home','ask','question','profile','leaderboard','cases','add-case','interviews','new-interview','interview'];
+  const known=['home','ask','question','profile','leaderboard','cases','add-case','interviews','new-interview','interview','about'];
   const route=known.includes(parts[0])?parts[0]:'home';
   const qId=route==='question'&&parts[1]?Number(parts[1]):null;
   const interviewId=route==='interview'&&parts[1]?Number(parts[1]):null;
@@ -298,6 +298,7 @@ function onHashChange(){
 }
 function loadRoute(){
   if(state.route==='home') loadHome();
+  else if(state.route==='about') render();
   else if(state.route==='question') loadQuestion(state.qId);
   else if(state.route==='profile') loadProfile();
   else if(state.route==='leaderboard') loadLeaderboard();
@@ -306,6 +307,80 @@ function loadRoute(){
   else if(state.route==='new-interview') render();
   else if(state.route==='interview') loadInterview(state.interviewId);
   else render();
+}
+function viewAbout(){
+  return`
+  <div style="max-width:800px;margin:0 auto">
+    <div class="hero-strip" style="text-align:center;flex-direction:column;padding:40px 28px">
+      <h1 style="font-size:28px;margin-bottom:16px">Building Better Products, Together</h1>
+      <p style="color:var(--muted);font-size:15px;line-height:1.7;max-width:600px;margin:0 auto">Leaducate is an AI-powered platform built for Product Managers, aspiring PMs, founders, and product teams. Our mission is to make product discovery, customer research, and product planning faster, smarter, and more collaborative.</p>
+      <p style="color:var(--muted);font-size:14px;margin:16px 0 8px">Whether you're validating an idea, analyzing customer interviews, writing PRDs, or planning your roadmap, Leaducate brings everything together in one workspace.</p>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:20px">
+        <a href="#/home" class="btn btn-primary">Join Community</a>
+        <a href="#/cases" class="btn btn-ghost">Explore Platform</a>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:24px">
+      <h2 style="font-size:20px;margin-bottom:12px;color:var(--purple-light)">Our Mission</h2>
+      <p style="color:var(--muted);font-size:14px;line-height:1.7">We believe great products are built by listening to users, making informed decisions, and collaborating effectively.</p>
+      <p style="color:var(--muted);font-size:14px;line-height:1.7;margin-top:12px">Leaducate helps Product Managers turn customer conversations into actionable insights using AI, so teams can spend less time on manual work and more time building products people love.</p>
+    </div>
+
+    <h2 style="font-size:20px;margin:28px 0 16px;color:var(--purple-light)">What We Offer</h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px">
+      <div class="cs-card"><div style="font-size:28px;margin-bottom:8px">🤖</div><div class="cs-title">AI Interview Workspace</div><p style="font-size:13px;color:var(--muted);line-height:1.6">Upload customer interviews or transcripts and instantly generate summaries, pain points, feature requests, sentiment analysis, and actionable product insights.</p></div>
+      <div class="cs-card"><div style="font-size:28px;margin-bottom:8px">💡</div><div class="cs-title">Idea Management</div><p style="font-size:13px;color:var(--muted);line-height:1.6">Capture, organize, and prioritize product ideas in one place.</p></div>
+      <div class="cs-card"><div style="font-size:28px;margin-bottom:8px">📄</div><div class="cs-title">AI PRD Generator</div><p style="font-size:13px;color:var(--muted);line-height:1.6">Create structured Product Requirement Documents in minutes with AI assistance.</p></div>
+      <div class="cs-card"><div style="font-size:28px;margin-bottom:8px">🗺️</div><div class="cs-title">Roadmap Planning</div><p style="font-size:13px;color:var(--muted);line-height:1.6">Turn validated ideas into clear product roadmaps and track progress.</p></div>
+      <div class="cs-card"><div style="font-size:28px;margin-bottom:8px">📊</div><div class="cs-title">Product Insights</div><p style="font-size:13px;color:var(--muted);line-height:1.6">Analyze customer feedback and identify trends that drive better product decisions.</p></div>
+      <div class="cs-card"><div style="font-size:28px;margin-bottom:8px">🤝</div><div class="cs-title">PM Community</div><p style="font-size:13px;color:var(--muted);line-height:1.6">Learn from fellow Product Managers, share experiences, and collaborate on real-world product challenges.</p></div>
+    </div>
+
+    <div class="cs-card" style="margin-top:24px;border-color:var(--purple-dim);background:linear-gradient(135deg,rgba(124,58,237,.08),transparent)">
+      <h2 style="font-size:18px;margin-bottom:12px;color:var(--purple-light)">Why Leaducate?</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;font-size:13px;color:var(--muted)">
+        <div>✦ AI-powered product discovery</div>
+        <div>✦ Faster customer research</div>
+        <div>✦ Smarter product decisions</div>
+        <div>✦ Centralized PM workspace</div>
+        <div>✦ Easy collaboration</div>
+        <div>✦ Modern and intuitive experience</div>
+        <div>✦ Built specifically for Product Managers</div>
+      </div>
+    </div>
+
+    <h2 style="font-size:20px;margin:28px 0 16px;color:var(--purple-light)">Who Is Leaducate For?</h2>
+    <div class="card">
+      <p style="color:var(--muted);font-size:14px;margin-bottom:14px">Leaducate is designed for:</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;font-size:14px;color:var(--text)">
+        <div>✦ Product Managers</div>
+        <div>✦ Associate Product Managers</div>
+        <div>✦ Product Owners</div>
+        <div>✦ Startup Founders</div>
+        <div>✦ UX Researchers</div>
+        <div>✦ Business Analysts</div>
+        <div>✦ Students preparing for PM careers</div>
+      </div>
+      <p style="color:var(--muted);font-size:13px;margin-top:14px">Whether you're building your first product or managing products at scale, Leaducate provides the tools to support every stage of the product lifecycle.</p>
+    </div>
+
+    <div class="card" style="margin-top:24px">
+      <h2 style="font-size:20px;margin-bottom:12px;color:var(--purple-light)">Our Vision</h2>
+      <p style="color:var(--muted);font-size:14px;line-height:1.7">Our vision is to become the go-to AI platform for Product Management—helping teams transform customer feedback into impactful product decisions through intelligence, collaboration, and continuous learning.</p>
+    </div>
+
+    <div class="hero-strip" style="text-align:center;flex-direction:column;padding:40px 28px;margin-top:24px">
+      <h2 style="font-size:22px;margin-bottom:8px">Join the Community</h2>
+      <p style="color:var(--muted);font-size:14px;line-height:1.6;max-width:560px;margin:0 auto">Product management is more than frameworks and roadmaps—it's about understanding users, solving meaningful problems, and learning from each other.</p>
+      <p style="color:var(--muted);font-size:14px;margin-top:12px">Join Leaducate to connect with fellow Product Managers, discover new ideas, and build products that make a difference.</p>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:20px">
+        <a href="#/home" class="btn btn-primary">Get Started</a>
+        <a href="#/cases" class="btn btn-ghost">Join Community</a>
+        <a href="mailto:vanshit@example.com" class="btn btn-ghost">Contact Us</a>
+      </div>
+    </div>
+  </div>`;
 }
 
 async function loadHome(){render();try{const qs=new URLSearchParams({sort:state.sort});if(state.filter!=='All')qs.set('subject',state.filter);const d=await api('/questions?'+qs);state.questions=d.questions;state.openCount=d.openCountTotal;state.avgSolve=d.avgSolveMinutes;state.loadErr=null;}catch(e){state.loadErr=e.message;}render();}
@@ -576,7 +651,7 @@ function synthHtml(){
 const LOGO_SVG=`<svg class="logo-icon" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><rect width="32" height="32" rx="9" fill="#7C3AED"/><path d="M6 17l5-5 9 9 6-10" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="25" cy="8" r="3" fill="#A78BFA"/></svg>`;
 
 function viewTopbar(){
-const links=[['home','Home'],['ask','Ask'],['cases','Case Studies'],['interviews','Interviews'],['leaderboard','Leaderboard'],['profile','Profile']];
+const links=[['home','Home'],['ask','Ask'],['cases','Case Studies'],['interviews','Interviews'],['about','About'],['leaderboard','Leaderboard'],['profile','Profile']];
   return`<div class="topbar">
     <a href="#/home" class="logo-wrap">
       ${LOGO_SVG}
@@ -1000,6 +1075,7 @@ function viewAuthModal(){
 function render(){
   let page='';
   if(state.route==='home') page=viewHome();
+  else if(state.route==='about') page=viewAbout();
   else if(state.route==='ask') page=viewAsk();
   else if(state.route==='question') page=viewQuestion();
   else if(state.route==='profile') page=viewProfile();
