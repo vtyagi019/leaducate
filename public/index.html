@@ -709,6 +709,7 @@ const links=[['home','Home'],['ask','Ask'],['cases','Case Study'],['blogs','Blog
   return`<div class="topbar">
     <a href="#/home" class="logo-wrap">
       ${LOGO_SVG}
+      <span class="logo-text">Klevate</span>
     </a>
     <nav class="mainnav">${links.map(([r,l])=>`<a href="#/${r}" class="${state.route===r?'active':''}">${l}</a>`).join('')}</nav>
     <div class="session">
