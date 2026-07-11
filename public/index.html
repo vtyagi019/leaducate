@@ -307,6 +307,7 @@ function onHashChange(){
   state.askMedia=null;state.ansMedia=null;state.similar=[];
   state.synthesis=null;state.synthLoading=false;
   state.interview=null;state.interviewTab='insights';state.interviewLoading=false;
+  state.blog=null;state.blogs=[];state.blogFiles=[];state.blogPDF=null;state.blogDraft={title:'',content:''};
   window.scrollTo(0,0);
   loadRoute();
 }
@@ -412,6 +413,18 @@ async function loadInterviews(){
 }
 
 async function loadInterview(id){
+  render();
+}
+
+async function loadBlogs(){
+  render();
+  try{const d=await api('/blogs');state.blogs=d.blogs;}catch(e){state.loadErr=e.message;}
+  render();
+}
+
+async function loadBlog(id){
+  render();
+  try{const d=await api('/blogs/'+id);state.blog=d.blog;}catch(e){state.blog=null;state.loadErr=e.message;}
   render();
 }
 
@@ -1093,12 +1106,14 @@ function exportInterviewPDF(id){
 function pickCaseImages(e){
   const files=Array.from(e.target.files);
   if(!files.length) return;
-  state.caseFiles = files.map(f => ({
+  // Append to existing files instead of replacing
+  if(!state.caseFiles) state.caseFiles = [];
+  state.caseFiles = [...state.caseFiles, ...files.map(f => ({
     file: f,
     previewUrl: URL.createObjectURL(f),
     type: 'image',
     filename: f.name
-  }));
+  }))];
   patchCaseFilesPrev();
 }
 
@@ -1300,7 +1315,9 @@ function shareBlog(id, title){
 function pickBlogImages(e){
   const files=Array.from(e.target.files);
   if(!files.length) return;
-  state.blogFiles = files.map(f => ({file:f, previewUrl:URL.createObjectURL(f), filename:f.name}));
+  // Append to existing files instead of replacing
+  if(!state.blogFiles) state.blogFiles = [];
+  state.blogFiles = [...state.blogFiles, ...files.map(f => ({file:f, previewUrl:URL.createObjectURL(f), filename:f.name}))];
   const el=document.getElementById('blog-images-prev');
   if(el) el.innerHTML = state.blogFiles.map((f,i)=>`<div class="media-preview" style="display:inline-block;margin:5px"><img src="${f.previewUrl}" style="max-width:120px;border-radius:6px"><button type="button" class="rm-media" onclick="removeBlogFile(${i})">Remove</button></div>`).join('');
 }
