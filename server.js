@@ -863,7 +863,7 @@ app.get('/api/blogs/:id', async (req, res) => {
 
 app.post('/api/blogs/:id/like', async (req, res) => {
   try {
-    const { author = '' } = req.body || {};
+    const { author = '' } = req.body;
     const id = Number(req.params.id);
     if (!author) return fail(res, 401, 'Sign in before liking.');
     if (!id) return fail(res, 400, 'Invalid blog id');
@@ -885,6 +885,46 @@ app.post('/api/blogs/:id/like', async (req, res) => {
     res.json({ blog: publicBlog(updated) });
   } catch (error) {
     console.error('Like blog error:', error);
+    fail(res, 500, 'Server error');
+  }
+});
+
+// ---------- blog comments ----------
+app.post('/api/blogs/:id/comments', async (req, res) => {
+  try {
+    const { author = '', text = '' } = req.body || {};
+    const blogId = Number(req.params.id);
+    
+    if (!author) return fail(res, 401, 'Sign in before commenting.');
+    if (!blogId) return fail(res, 400, 'Invalid blog id');
+    if (!String(text || '').trim()) return fail(res, 400, 'Comment cannot be empty.');
+
+    const blog = await db.collection('blogs').findOne({ id: blogId });
+    if (!blog) return fail(res, 404, 'Blog not found');
+
+    const comment = {
+      id: Date.now(),
+      author,
+      text: String(text).trim(),
+      createdAt: Date.now()
+    };
+
+    await db.collection('blogs').updateOne(
+      { id: blogId },
+      { $push: { comments: comment } }
+    );
+
+    // Award points to commenter
+    await db.collection('users').updateOne(
+      { name: author },
+      { $inc: { points: 2 } },
+      { upsert: true }
+    );
+
+    const updated = await db.collection('blogs').findOne({ id: blogId });
+    res.status(201).json({ blog: publicBlog(updated) });
+  } catch (error) {
+    console.error('Add comment error:', error);
     fail(res, 500, 'Server error');
   }
 });

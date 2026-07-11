@@ -1302,19 +1302,75 @@ function viewBlogs(){
   </div>`;
 }
 
+async function postBlogComment(e, blogId){
+  e.preventDefault();
+  const text = e.target.elements.comment.value.trim();
+  if(!text) return;
+  const doPost = async()=>{
+    try{
+      const d = await api('/blogs/'+blogId+'/comments',{method:'POST',body:{author:state.currentUser,text}});
+      state.blog = d.blog;
+      e.target.reset();
+      render();
+    }catch(err){state.formErr=err.message;render();}
+  };
+  if(!requireAuth(doPost)) return;
+  await doPost();
+}
+
 function viewBlog(){
   if(!state.blog) return `<div class="empty"><h3>Loading blog...</h3></div>`;
   const b = state.blog;
   return `<div class="card">
     <a href="#/blogs" style="color:var(--purple-light);font-size:13px">← Back to blogs</a>
-    <h1 style="font-size:24px;margin:12px 0 8px">${esc(b.title)}</h1>
-    <div style="color:var(--muted);font-size:13px;margin-bottom:16px">${esc(b.author)} · ${new Date(b.createdAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</div>
-    ${b.images && b.images.length ? `<div style="margin-bottom:16px">${b.images.map(img=>`<img src="${img}" alt="blog image" style="max-width:100%;border-radius:8px;margin-bottom:8px">`).join('')}</div>` : ''}
-    <div style="font-size:15px;color:#C4C4D4;white-space:pre-wrap;margin-bottom:20px;line-height:1.7">${esc(b.content)}</div>
-    ${b.pdf ? `<div style="margin-bottom:16px"><a href="${b.pdf}" target="_blank" class="btn btn-primary">📄 Download PDF</a></div>` : ''}
-    <div style="margin-top:20px">
-      <button class="share-btn btn btn-ghost btn-sm" onclick="shareBlog(${b.id}, '${esc(b.title)}')">🔗 Share on social media</button>
+    <div style="display:flex;align-items:center;gap:12px;margin:12px 0 16px">
+      <div class="av" style="width:44px;height:44px;font-size:16px;background:var(--purple)">${ini(b.author)}</div>
+      <div>
+        <div style="font-weight:600;font-size:18px">${esc(b.author)}</div>
+        <div style="color:var(--muted);font-size:12px">Product Manager</div>
+      </div>
     </div>
+    ${b.title ? `<h1 style="font-size:24px;margin:8px 0">${esc(b.title)}</h1>` : ''}
+    <div style="color:var(--muted);font-size:13px;margin-bottom:16px">${new Date(b.createdAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</div>
+    ${b.content ? `<div style="font-size:15px;color:#C4C4D4;white-space:pre-wrap;margin-bottom:20px;line-height:1.7">${esc(b.content)}</div>` : ''}
+    ${b.images && b.images.length ? `
+      <div class="blog-images">
+        ${b.images.map(img=>`<div class="blog-image-item" onclick="openLightbox('${img}')"><img src="${img}" alt="blog image"></div>`).join('')}
+      </div>` : ''}
+    ${b.pdf ? `<div style="margin-bottom:16px"><a href="${b.pdf}" target="_blank" class="btn btn-ghost btn-sm">📄 View attached PDF</a></div>` : ''}
+    
+    <div style="display:flex;gap:16px;margin:16px 0;color:var(--muted);font-size:13px;border-top:1px solid var(--border);padding-top:12px">
+      <span>👍 <button onclick="likeBlog(${b.id})" style="background:none;border:none;color:inherit;cursor:pointer">${b.likes||0} likes</button></span>
+      <span>💬 ${b.comments ? b.comments.length : 0} comments</span>
+      <button onclick="shareBlog(${b.id}, '${esc(b.title)}')" style="background:none;border:none;color:inherit;cursor:pointer">🔗 Share</button>
+    </div>
+
+    ${b.comments && b.comments.length ? `
+      <div style="margin-top:24px">
+        <h3 style="font-size:15px;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:.04em">Comments</h3>
+        ${b.comments.map(c=>`
+          <div class="cs-field" style="margin-bottom:12px;padding:12px;border:1px solid var(--border);border-radius:8px;background:var(--surface2)">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+              <div class="av" style="width:28px;height:28px;font-size:11px">${ini(c.author)}</div>
+              <span style="font-weight:600;font-size:13px">${esc(c.author)}</span>
+              <span style="color:var(--muted);font-size:11px">· ${new Date(c.createdAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</span>
+            </div>
+            <div style="font-size:14px;color:#C4C4D4">${esc(c.text)}</div>
+          </div>
+        `).join('')}
+      </div>` : ''}
+
+    ${state.currentUser ? `
+      <div class="ansform-wrap" style="margin-top:20px">
+        <form onsubmit="postBlogComment(event,${b.id})">
+          <textarea name="comment" placeholder="Add a comment..." style="min-height:60px;font-size:13px"></textarea>
+          <div class="formfoot" style="justify-content:flex-end">
+            <button type="submit" class="btn btn-primary btn-sm">Comment</button>
+          </div>
+        </form>
+      </div>` : `<p style="color:var(--muted);font-size:13px;margin-top:12px">Sign in to add a comment.</p>`}
+    
+    ${state.formErr?`<div class="err" style="margin-top:12px">${esc(state.formErr)}</div>`:''}
   </div>`;
 }
 
