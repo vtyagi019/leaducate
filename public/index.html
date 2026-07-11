@@ -246,8 +246,12 @@ const SUBJECTS={'Product Management':'#7C3AED','Prioritization':'#6366F1','Metri
 const RANK_ICONS=['🥇','🥈','🥉'];
 
 let state={
-  route:'home',qId:null,interviewId:null,
+  route:'home',qId:null,interviewId:null,blogId:null,
   currentUser:localStorage.getItem('lu_user')||null,
+  blogs:[],blog:null,
+  blogDraft:{title:'',content:''},
+  blogFiles:[],
+  blogPDF:null,
   questions:[],openCount:0,avgSolve:0,
   question:null, synthesis:null, synthLoading:false,
   profile:null, profileTab:'asked',
@@ -286,19 +290,20 @@ async function uploadMedia(media){
 
 function parseHash(){
   const parts=location.hash.replace(/^#\/?/,'').split('/').filter(Boolean);
-  const known=['home','ask','question','profile','leaderboard','cases','add-case','interviews','new-interview','interview','about'];
+  const known=['home','ask','question','profile','leaderboard','cases','add-case','blogs','blog','add-blog','interviews','new-interview','interview','about'];
   const route=known.includes(parts[0])?parts[0]:'home';
   const qId=route==='question'&&parts[1]?Number(parts[1]):null;
   const interviewId=route==='interview'&&parts[1]?Number(parts[1]):null;
-  return{route,qId,interviewId};
+  const blogId=route==='blog'&&parts[1]?Number(parts[1]):null;
+  return{route,qId,interviewId,blogId};
 }
 function navigate(route,qId){
   const t='#/'+route+(qId?'/'+qId:'');
   if(location.hash===t) onHashChange(); else location.hash=t;
 }
 function onHashChange(){
-  const{route,qId,interviewId}=parseHash();
-  state.route=route;state.qId=qId;state.interviewId=interviewId;state.formErr=null;
+  const{route,qId,interviewId,blogId}=parseHash();
+  state.route=route;state.qId=qId;state.interviewId=interviewId;state.blogId=blogId;state.formErr=null;
   state.askMedia=null;state.ansMedia=null;state.similar=[];
   state.synthesis=null;state.synthLoading=false;
   state.interview=null;state.interviewTab='insights';state.interviewLoading=false;
@@ -312,8 +317,10 @@ function loadRoute(){
   else if(state.route==='profile') loadProfile();
   else if(state.route==='leaderboard') loadLeaderboard();
   else if(state.route==='cases') loadCases();
+  else if(state.route==='blogs') loadBlogs();
+  else if(state.route==='blog') loadBlog(state.blogId);
+  else if(state.route==='add-blog') render();
   else if(state.route==='interviews') loadInterviews();
-  else if(state.route==='new-interview') render();
   else if(state.route==='interview') loadInterview(state.interviewId);
   else render();
 }
@@ -686,7 +693,7 @@ function synthHtml(){
 const LOGO_SVG=`<svg class="logo-icon" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><rect width="32" height="32" rx="9" fill="#7C3AED"/><path d="M6 17l5-5 9 9 6-10" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="25" cy="8" r="3" fill="#A78BFA"/></svg>`;
 
 function viewTopbar(){
-  const links=[['home','Home'],['ask','Ask'],['cases','Case Study'],['interviews','Interview'],['profile','Profile'],['leaderboard','Leaderboard'],['about','About']];
+const links=[['home','Home'],['ask','Ask'],['cases','Case Study'],['blogs','Blog'],['interviews','Interview'],['profile','Profile'],['leaderboard','Leaderboard'],['about','About']];
   return`<div class="topbar">
     <a href="#/home" class="logo-wrap">
       ${LOGO_SVG}
@@ -1156,6 +1163,171 @@ function removeCaseImage(){
   if(inp) inp.value='';
 }
 
+// Blog functions
+function onBlogInput(v){
+  state.blogDraft.title = v;
+  if(!state.blogDraft) state.blogDraft = {title:'',content:''};
+}
+
+async function submitBlog(e){
+  e.preventDefault();
+  const f=e.target;
+  const doPost=async()=>{
+    try{
+      let images = [];
+      if(state.blogFiles && state.blogFiles.length){
+        for(const bf of state.blogFiles){
+          const uploaded = await uploadMedia({file: bf.file, filename: bf.filename});
+          if(uploaded) images.push(uploaded.url);
+        }
+      }
+
+      let pdfUrl = null;
+      if(state.blogPDF){
+        const uploaded = await uploadMedia({file: state.blogPDF.file, filename: state.blogPDF.filename});
+        if(uploaded) pdfUrl = uploaded.url;
+      }
+
+      await api('/blogs',{method:'POST',body:{
+        author:state.currentUser,
+        title:state.blogDraft.title,
+        content:f.elements.content.value,
+        images,
+        pdf: pdfUrl
+      }});
+
+      state.blogFiles=[];
+      state.blogPDF=null;
+      state.blogDraft={title:'',content:''};
+      render();
+      navigate('blogs');
+    }
+    catch(err){state.formErr=err.message;render();}
+  };
+  if(!requireAuth(doPost))return;await doPost();
+}
+
+function viewBlogs(){
+  if(!state.blogs || state.blogs.length===0){
+    return `<div class="card">
+      <h1 style="font-size:22px;margin-bottom:4px">PM Blogs</h1>
+      <p style="color:var(--muted);font-size:13px;margin-bottom:20px">Share your product management insights.</p>
+      <div class="empty"><h3>No blogs yet</h3><p>Be the first to write one.</p></div>
+    </div>`;
+  }
+  return `<div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <div><h1 style="font-size:22px;margin-bottom:4px">PM Blogs</h1><p style="color:var(--muted);font-size:13px">Share your product management insights.</p></div>
+      <a href="#/add-blog" class="btn btn-primary">+ Write blog</a>
+    </div>
+    ${state.blogs.map(b=>`
+      <div class="cs-card">
+        <div class="cs-title">${esc(b.title)}</div>
+        <div class="cs-meta">${esc(b.author)} · ${new Date(b.createdAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</div>
+        ${b.images && b.images.length ? `<div style="margin:10px 0">${b.images.map(img=>`<img src="${img}" alt="blog image" style="max-width:100%;border-radius:8px;margin-bottom:8px">`).join('')}</div>` : ''}
+        <div class="cs-field" style="margin-bottom:10px"><span class="fv" style="font-size:14px;white-space:pre-wrap">${esc(b.content).substring(0,200)}${b.content.length>200?'...':''}</span></div>
+        <div style="margin-top:12px;display:flex;gap:10px;align-items:center">
+          <a href="#/blog/${b.id}" class="btn btn-ghost btn-sm">Read more</a>
+          <button class="share-btn btn btn-ghost btn-sm" onclick="shareBlog(${b.id}, '${esc(b.title)}')">🔗 Share</button>
+          ${b.pdf ? `<a href="${b.pdf}" target="_blank" class="btn btn-ghost btn-sm">📄 PDF</a>` : ''}
+        </div>
+      </div>
+    `).join('')}
+  </div>`;
+}
+
+function viewBlog(){
+  if(!state.blog) return `<div class="empty"><h3>Loading blog...</h3></div>`;
+  const b = state.blog;
+  return `<div class="card">
+    <a href="#/blogs" style="color:var(--purple-light);font-size:13px">← Back to blogs</a>
+    <h1 style="font-size:24px;margin:12px 0 8px">${esc(b.title)}</h1>
+    <div style="color:var(--muted);font-size:13px;margin-bottom:16px">${esc(b.author)} · ${new Date(b.createdAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</div>
+    ${b.images && b.images.length ? `<div style="margin-bottom:16px">${b.images.map(img=>`<img src="${img}" alt="blog image" style="max-width:100%;border-radius:8px;margin-bottom:8px">`).join('')}</div>` : ''}
+    <div style="font-size:15px;color:#C4C4D4;white-space:pre-wrap;margin-bottom:20px;line-height:1.7">${esc(b.content)}</div>
+    ${b.pdf ? `<div style="margin-bottom:16px"><a href="${b.pdf}" target="_blank" class="btn btn-primary">📄 Download PDF</a></div>` : ''}
+    <div style="margin-top:20px">
+      <button class="share-btn btn btn-ghost btn-sm" onclick="shareBlog(${b.id}, '${esc(b.title)}')">🔗 Share on social media</button>
+    </div>
+  </div>`;
+}
+
+function viewAddBlog(){
+  return `<div class="form-wrap">
+    <h1>Write a Blog</h1>
+    <p class="sub">Share your PM insights with the community. Earn 15 points.</p>
+    <div class="card">
+      ${state.formErr?`<div class="err" style="margin-bottom:12px">${esc(state.formErr)}</div>`:''}
+      <form onsubmit="submitBlog(event)">
+        <label>Title</label>
+        <input type="text" name="title" placeholder="e.g. How to prioritize features as a PM" value="${esc(state.blogDraft?.title||'')}" oninput="state.blogDraft.title=this.value">
+
+        <label>Attach images (optional, multiple allowed)</label>
+        <input type="file" id="blog-images" accept="image/*" multiple style="display:block" onchange="pickBlogImages(event)">
+        <div id="blog-images-prev"></div>
+
+        <label>Attach PDF (optional)</label>
+        <input type="file" id="blog-pdf" accept="application/pdf" style="display:block" onchange="pickBlogPDF(event)">
+        <div id="blog-pdf-prev"></div>
+
+        <label>Content</label>
+        <textarea name="content" placeholder="Write your blog content here..." style="min-height:200px">${esc(state.blogDraft?.content||'')}</textarea>
+
+        <div class="formfoot">
+          <button type="button" class="btn btn-ghost" onclick="navigate('blogs')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Publish (+15 pts)</button>
+        </div>
+      </form>
+    </div>
+  </div>`;
+}
+
+function shareBlog(id, title){
+  const url = `${location.origin}#\/blog\/${id}`;
+  const text = `Check out this PM blog: ${title}`;
+  if(navigator.share){
+    navigator.share({title, text, url}).catch(()=>{});
+  } else {
+    const shareLinks = `
+      Twitter: https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}
+      LinkedIn: https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}
+      Facebook: https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}
+    `;
+    prompt('Share this blog:', shareLinks.split('\\n')[0].split(': ')[1]);
+  }
+}
+
+function pickBlogImages(e){
+  const files=Array.from(e.target.files);
+  if(!files.length) return;
+  state.blogFiles = files.map(f => ({file:f, previewUrl:URL.createObjectURL(f), filename:f.name}));
+  const el=document.getElementById('blog-images-prev');
+  if(el) el.innerHTML = state.blogFiles.map((f,i)=>`<div class="media-preview" style="display:inline-block;margin:5px"><img src="${f.previewUrl}" style="max-width:120px;border-radius:6px"><button type="button" class="rm-media" onclick="removeBlogFile(${i})">Remove</button></div>`).join('');
+}
+
+function pickBlogPDF(e){
+  const f=e.target.files[0];
+  if(!f || f.type !== 'application/pdf'){
+    if(f) alert('Please upload a PDF file');
+    return;
+  }
+  state.blogPDF = {file:f, filename:f.name};
+  const el=document.getElementById('blog-pdf-prev');
+  if(el) el.innerHTML = `<div class="media-preview" style="margin-top:10px"><span style="color:var(--purple-light)">📄 ${f.name}</span><button type="button" class="rm-media" onclick="removeBlogPDF()">Remove</button></div>`;
+}
+
+function removeBlogFile(idx){
+  state.blogFiles.splice(idx,1);
+  const el=document.getElementById('blog-images-prev');
+  if(el) el.innerHTML = state.blogFiles.map((f,i)=>`<div class="media-preview" style="display:inline-block;margin:5px"><img src="${f.previewUrl}" style="max-width:120px;border-radius:6px"><button type="button" class="rm-media" onclick="removeBlogFile(${i})">Remove</button></div>`).join('');
+}
+
+function removeBlogPDF(){
+  state.blogPDF=null;
+  const el=document.getElementById('blog-pdf-prev');
+  if(el) el.innerHTML='';
+}
+
 
 
 function viewAuthModal(){
@@ -1186,6 +1358,9 @@ function render(){
   else if(state.route==='leaderboard') page=viewLeaderboard();
   else if(state.route==='cases') page=viewCases();
   else if(state.route==='add-case') page=viewAddCase();
+  else if(state.route==='blogs') page=viewBlogs();
+  else if(state.route==='blog') page=viewBlog();
+  else if(state.route==='add-blog') page=viewAddBlog();
   else if(state.route==='interviews') page=viewInterviews();
   else if(state.route==='new-interview') page=viewNewInterview();
   else if(state.route==='interview') page=viewInterviewReport();
