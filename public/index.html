@@ -1225,8 +1225,10 @@ async function submitBlog(e){
 function viewBlogs(){
   if(!state.blogs || state.blogs.length===0){
     return `<div class="card">
-      <h1 style="font-size:22px;margin-bottom:4px">PM Blogs</h1>
-      <p style="color:var(--muted);font-size:13px;margin-bottom:20px">Share your product management insights.</p>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <div><h1 style="font-size:22px;margin-bottom:4px">PM Blogs</h1><p style="color:var(--muted);font-size:13px">Share your product management insights.</p></div>
+        <a href="#/add-blog" class="btn btn-primary">+ Write blog</a>
+      </div>
       <div class="empty"><h3>No blogs yet</h3><p>Be the first to write one.</p></div>
     </div>`;
   }
@@ -1236,15 +1238,23 @@ function viewBlogs(){
       <a href="#/add-blog" class="btn btn-primary">+ Write blog</a>
     </div>
     ${state.blogs.map(b=>`
-      <div class="cs-card">
-        <div class="cs-title">${esc(b.title)}</div>
-        <div class="cs-meta">${esc(b.author)} · ${new Date(b.createdAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</div>
-        ${b.images && b.images.length ? `<div style="margin:10px 0">${b.images.map(img=>`<img src="${img}" alt="blog image" style="max-width:100%;border-radius:8px;margin-bottom:8px">`).join('')}</div>` : ''}
-        <div class="cs-field" style="margin-bottom:10px"><span class="fv" style="font-size:14px;white-space:pre-wrap">${esc(b.content).substring(0,200)}${b.content.length>200?'...':''}</span></div>
-        <div style="margin-top:12px;display:flex;gap:10px;align-items:center">
-          <a href="#/blog/${b.id}" class="btn btn-ghost btn-sm">Read more</a>
-          <button class="share-btn btn btn-ghost btn-sm" onclick="shareBlog(${b.id}, '${esc(b.title)}')">🔗 Share</button>
-          ${b.pdf ? `<a href="${b.pdf}" target="_blank" class="btn btn-ghost btn-sm">📄 PDF</a>` : ''}
+      <div class="cs-card" style="padding:20px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+          <div class="av" style="width:44px;height:44px;font-size:16px;background:var(--purple)">${ini(b.author)}</div>
+          <div>
+            <div style="font-weight:600;font-size:15px">${esc(b.author)}</div>
+            <div style="color:var(--muted);font-size:12px">Product Manager</div>
+            <div style="color:var(--muted);font-size:11px">${new Date(b.createdAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</div>
+          </div>
+        </div>
+        ${b.title ? `<div style="font-size:16px;font-weight:600;margin-bottom:8px">${esc(b.title)}</div>` : ''}
+        ${b.content ? `<div style="font-size:14px;color:#C4C4D4;line-height:1.6;margin-bottom:12px;white-space:pre-wrap">${esc(b.content).substring(0,300)}${b.content.length>300?'...':''}</div>` : ''}
+        ${b.images && b.images.length ? `<div style="margin-bottom:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px">${b.images.map(img=>`<img src="${img}" alt="blog image" style="width:100%;border-radius:8px;object-fit:cover">`).join('')}</div>` : ''}
+        ${b.pdf ? `<div style="margin-bottom:12px"><a href="${b.pdf}" target="_blank" class="btn btn-ghost btn-sm">📄 View attached PDF</a></div>` : ''}
+        <div style="display:flex;gap:16px;margin-top:8px;color:var(--muted);font-size:13px;border-top:1px solid var(--border);padding-top:12px">
+          <span>👍 <button onclick="likeBlog(${b.id})" style="background:none;border:none;color:inherit;cursor:pointer">${b.likes||0} likes</button></span>
+          <span>💬 ${b.comments ? b.comments.length : 0} comments</span>
+          <button onclick="shareBlog(${b.id}, '${esc(b.title)}')" style="background:none;border:none;color:inherit;cursor:pointer">🔗 Share</button>
         </div>
       </div>
     `).join('')}
@@ -1343,6 +1353,16 @@ function removeBlogPDF(){
   state.blogPDF=null;
   const el=document.getElementById('blog-pdf-prev');
   if(el) el.innerHTML='';
+}
+
+async function likeBlog(id){
+  if(!requireAuth(()=>{}))return;
+  try{
+    const d=await api('/blogs/'+id+'/like',{method:'POST',body:{author:state.currentUser}});
+    const idx=state.blogs.findIndex(b=>b.id===id);
+    if(idx>-1) state.blogs[idx]=d.blog;
+    render();
+  }catch(e){}
 }
 
 

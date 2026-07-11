@@ -785,6 +785,110 @@ app.get('/api/case-studies', async (req, res) => {
   }
 });
 
+// ---------- blogs (LinkedIn-style posts) ----------
+function publicBlog(b) {
+  return {
+    id: b.id,
+    title: b.title,
+    author: b.author,
+    content: b.content,
+    images: b.images || [],
+    pdf: b.pdf || null,
+    createdAt: b.createdAt,
+    likes: b.likes || 0,
+    comments: b.comments || []
+  };
+}
+
+let blogsNextId = 1;
+
+app.get('/api/blogs', async (req, res) => {
+  try {
+    const docs = await db.collection('blogs')
+      .find({})
+      .sort({ createdAt: -1 })
+      .toArray();
+
+    res.json({ blogs: docs.map(publicBlog) });
+  } catch (error) {
+    console.error('Get blogs error:', error);
+    fail(res, 500, 'Server error');
+  }
+});
+
+app.post('/api/blogs', async (req, res) => {
+  try {
+    const { author = '', title = '', content = '', images = [], pdf = null } = req.body || {};
+
+    if (!author) return fail(res, 401, 'Sign in before posting a blog.');
+    if (String(title).trim().length < 3 && !String(content || '').trim()) return fail(res, 400, 'Title or content is required.');
+
+    const id = blogsNextId++;
+
+    const doc = {
+      id,
+      author,
+      title: String(title).trim(),
+      content: String(content).trim(),
+      images: Array.isArray(images) ? images.filter(Boolean) : [],
+      pdf: pdf || null,
+      createdAt: Date.now(),
+      likes: 0,
+      comments: []
+    };
+
+    await db.collection('blogs').insertOne(doc);
+
+    res.status(201).json({ blog: publicBlog(doc) });
+  } catch (error) {
+    console.error('Create blog error:', error);
+    fail(res, 500, 'Server error');
+  }
+});
+
+app.get('/api/blogs/:id', async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    if (!id) return fail(res, 400, 'Invalid blog id');
+
+    const doc = await db.collection('blogs').findOne({ id });
+    if (!doc) return fail(res, 404, 'Blog not found');
+
+    res.json({ blog: publicBlog(doc) });
+  } catch (error) {
+    console.error('Get blog error:', error);
+    fail(res, 500, 'Server error');
+  }
+});
+
+app.post('/api/blogs/:id/like', async (req, res) => {
+  try {
+    const { author = '' } = req.body || {};
+    const id = Number(req.params.id);
+    if (!author) return fail(res, 401, 'Sign in before liking.');
+    if (!id) return fail(res, 400, 'Invalid blog id');
+
+    await db.collection('blogs').updateOne(
+      { id },
+      { $inc: { likes: 1 } }
+    );
+
+    const updated = await db.collection('blogs').findOne({ id });
+    if (!updated) return fail(res, 404, 'Blog not found');
+
+    // Award points to author
+    await db.collection('users').updateOne(
+      { name: updated.author },
+      { $inc: { points: 5 } }
+    );
+
+    res.json({ blog: publicBlog(updated) });
+  } catch (error) {
+    console.error('Like blog error:', error);
+    fail(res, 500, 'Server error');
+  }
+});
+
 // ---------- interviews (feature removed) ----------
 function nowIso(ts){
   return ts ? new Date(ts).toISOString() : new Date().toISOString();
